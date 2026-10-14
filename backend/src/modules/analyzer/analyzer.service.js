@@ -39,14 +39,17 @@ const sportExtention = {
   ".dart": "Dart",
 };
 
-async function analyzeJavaScriptFile(filePath, extension) {
-  const sourceCode = await fs.readFile(filePath, "utf-8");
-  const plugins =
-    extension === ".text"
-      ? ["typescript", "jsx"]
-      : extension === ".ts"
-        ? ["typescript"]
-        : ["jsx"];
+ function analyzeJavaScriptSource(sourceCode, extension) {
+  // const sourceCode = await fs.readFile(filePath, "utf-8");
+  const plugins = [];
+
+if ([".ts", ".tsx"].includes(extension)) {
+  plugins.push("typescript");
+}
+
+if ([".jsx", ".tsx"].includes(extension)) {
+  plugins.push("jsx");
+}
 
   const ast = parse(sourceCode, {
     sourceType: "unambiguous",
@@ -110,28 +113,44 @@ async function scanDriectroies(driectroyPath, rootPath, results) {
     if (enrty.name.startsWith(".") && enrty.name !== ".github") {
       continue;
     }
+
     const fullPath = path.join(driectroyPath, enrty.name);
+
     if (enrty.isDirectory()) {
       if (ignoredDirectories.has(enrty.name)) {
         continue;
       }
+
       await scanDriectroies(fullPath, rootPath, results);
       continue;
     }
+
     if (!enrty.isFile()) {
       continue;
     }
+
     const extension = path.extname(enrty.name).toLowerCase();
     const language = sportExtention[extension];
+
     if (!language) {
       continue;
     }
+
     const fileResult = {
       file: path.relative(rootPath, fullPath),
       extension,
       language,
     };
-    const supportedExtensions = [".js", ".jsx", ".mjs", ".cjs", ".ts", ".tsx"];
+
+    const supportedExtensions = [
+      ".js",
+      ".jsx",
+      ".mjs",
+      ".cjs",
+      ".ts",
+      ".tsx",
+    ];
+
     if (supportedExtensions.includes(extension)) {
       try {
         const structure = await analyzeJavaScriptFile(fullPath, extension);
@@ -140,6 +159,7 @@ async function scanDriectroies(driectroyPath, rootPath, results) {
         fileResult.analysisError = error.message;
       }
     }
+
     results.push(fileResult);
   }
 }
@@ -163,4 +183,73 @@ async function analyzeRepository(repositoryPath) {
     files,
   };
 }
-export { analyzeRepository };
+async function analyzeSelectedFiles(selectedFiles) {
+  if (!Array.isArray(selectedFiles) || selectedFiles.length === 0) {
+   throw new Error("No files were provided for analysis.");
+  }
+  const files = [];
+  const languageCounts = {};
+  for (const selectedFile of selectedFiles) {
+    const relativePath = selectedFile.path;
+    const sourceCode = selectedFile.content;
+    if (typeof relativePath !== "string" || typeof sourceCode !== "string") {
+      continue;
+    }
+    const normalizedPath = relativePath.replaceAll("\\","//");
+    const pathParts = normalizedPath.split("/");
+     if (
+      pathParts.some(
+        (part) =>
+          part === ".." ||
+          part === "node_modules" ||
+          part === ".git" ||
+          part === "dist" ||
+          part === "build" ||
+          part === "coverage" ||
+          part === ".next" ||
+          part === ".venv" ||
+          part === "venv" ||
+          part === "__pycache__"
+      )
+    ) {
+      continue;
+    }
+    const extension = path.extname(normalizedPath).toLowerCase();
+    const language = sportExtention[extension];
+    if (!language) {
+      continue
+    }
+    const fileResult = {
+      file : normalizedPath,
+      extension,
+      language,
+    }
+     const supportedExtensions = [
+      ".js",
+      ".jsx",
+      ".mjs",
+      ".cjs",
+      ".ts",
+      ".tsx",
+    ];
+    if (sportExtention.includes(extension)) {
+      try {
+        const structure = analyzeJavaScriptSource(
+          sourceCode,
+          extension
+        );
+        Object.assign(fileResult, structure)
+      } catch (error) {
+        fileResult.analysisError = Error.message
+      }
+    }
+    files.push(fileResult);
+    languageCounts [language] = (languageCounts[language] || 0 ) + 1; 
+  }
+  return {
+    totalFiles: files.length,
+    languageCounts,
+    files
+  }
+}
+export { analyzeRepository, analyzeSelectedFiles };

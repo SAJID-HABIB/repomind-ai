@@ -6,6 +6,36 @@ import './App.css'
 function App() {
 
   const [isSideBarOpen ,setIsSideBarOpen] = useState(false);
+  const [selectedFiles, setSelectedFiles] = useState([]);
+  const [selectedFolderName, setSelectedFolderName] = useState(""); 
+  const handleFolderChange = (event) => {
+  const files = Array.from(event.target.files || []);
+   const excludedFolders = [
+    "node_modules",
+    ".git",
+    "dist",
+    "build",
+    "coverage",
+    ".next",
+    ".venv",
+    "venv",
+    "__pycache__",
+  ];
+  const filteredFiles = files.filter((file) => {
+    const pathParts = file.webkitRelativePath.split("/");
+    return !pathParts.some((part) => excludedFolders.includes(part));
+  })
+  setSelectedFiles(filteredFiles);
+
+  if (files.length > 0) {
+    const folderName = files[0].webkitRelativePath.split("/")[0];
+    setSelectedFolderName(folderName);
+  } else {
+    setSelectedFolderName("");
+  }
+   console.log("Total selected files:", files.length);
+   console.log("Files after filtering:", filteredFiles.length);
+}
 
   return (
       <div className="flex min-h-screen w-full bg-slate-950">
@@ -93,6 +123,56 @@ function App() {
       Repository analysis functionality will be connected later.
     </p>
   </section>
+
+  {/* Analyze Local Folder */}
+<section className="min-w-0 rounded-2xl border border-slate-800 bg-slate-900 p-4 sm:p-6">
+  <h2 className="text-lg font-semibold text-white">
+    Analyze Local Folder
+  </h2>
+
+  <p className="mt-2 text-sm text-slate-400">
+    Select a project folder from your computer to analyze its code.
+  </p>
+
+  <div className="mt-5">
+    <label
+      htmlFor="project-folder"
+      className="inline-block cursor-pointer rounded-xl bg-blue-600 px-5 py-3 text-sm font-medium text-white transition hover:bg-blue-500"
+    >
+      Browse Folder
+    </label>
+
+    <input
+      id="project-folder"
+      type="file"
+      webkitdirectory=""
+      directory=""
+      multiple
+      onChange={handleFolderChange}
+      className="hidden"
+    />
+  </div>
+
+  {selectedFolderName && (
+    <div className="mt-4 rounded-xl border border-slate-700 bg-slate-950 p-4">
+      <p className="text-sm font-medium text-white">
+        Selected folder: {selectedFolderName}
+      </p>
+
+      <p className="mt-2 text-sm text-slate-400">
+  {selectedFiles.length} files ready to scan
+</p>
+    </div>
+  )}
+
+  <button
+    type="button"
+    disabled={selectedFiles.length === 0}
+    className="mt-4 rounded-xl bg-blue-600 px-6 py-3 text-sm font-medium text-white transition hover:bg-blue-500 disabled:cursor-not-allowed disabled:opacity-50"
+  >
+    Scan Local Project
+  </button>
+</section>
 
   {/* Project Statistics */}
 <section>
