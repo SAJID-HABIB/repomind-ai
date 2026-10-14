@@ -1,8 +1,11 @@
-import { analyzeRepository } from "./analyzer.service";
+import { analyzeRepository } from "./analyzer.service.js";
 
 async function analyzeRepositoryController(req,res) {
     try {
-        const {repositoryPath} = req.body;
+      console.log("Content-Type:", req.headers["content-type"]);
+console.log("Request Body:", req.body);
+
+const { repositoryPath } = req.body ?? {};
         if (typeof repositoryPath !== "string" || repositoryPath.trim() === "") {
             return res.status(400).json({
                 success: false,
