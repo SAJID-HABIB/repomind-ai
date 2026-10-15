@@ -8,6 +8,9 @@ function App() {
   const [isSideBarOpen ,setIsSideBarOpen] = useState(false);
   const [selectedFiles, setSelectedFiles] = useState([]);
   const [selectedFolderName, setSelectedFolderName] = useState(""); 
+  const [isScanning, setIsScanning] = useState(false);
+  const [scanError, setScanError] = useState("");
+  const [analysisResult, setAnalysisResult] = useState(null);
   const handleFolderChange = (event) => {
   const files = Array.from(event.target.files || []);
    const excludedFolders = [
@@ -23,6 +26,9 @@ function App() {
   ];
   const filteredFiles = files.filter((file) => {
     const pathParts = file.webkitRelativePath.split("/");
+    console.log("First selected file:", selectedFiles[0]);
+console.log("Received files count:", selectedFiles.length);
+
     return !pathParts.some((part) => excludedFolders.includes(part));
   })
   setSelectedFiles(filteredFiles);
@@ -35,6 +41,90 @@ function App() {
   }
    console.log("Total selected files:", files.length);
    console.log("Files after filtering:", filteredFiles.length);
+
+}
+
+const handleScanProject  = async () => {
+  if (setSelectedFiles.length === 0) {
+    scanError("Please select a project folder first.");
+    return
+  }
+  setIsScanning(true);
+  setScanError("");
+  setAnalysisResult(null);
+  try {
+    const supportedExtensions = [
+      ".js",
+      ".jsx",
+      ".mjs",
+      ".cjs",
+      ".ts",
+      ".tsx",
+      ".py",
+      ".java",
+      ".c",
+      ".h",
+      ".cpp",
+      ".hpp",
+      ".cs",
+      ".go",
+      ".rs",
+      ".php",
+      ".rb",
+      ".swift",
+      ".kt",
+      ".dart",
+    ];
+    const filesToAnalyze = selectedFiles.filter((file) => {
+      const fileName = file.name.toLowerCase();
+      return supportedExtensions.some((extension) =>
+        fileName.endsWith(extension)
+      );
+    }) 
+       console.log("First file to analyze:", filesToAnalyze[0]);
+console.log("Files to analyze count:", filesToAnalyze.length);
+    if (filesToAnalyze.length === 0) {
+        throw new Error("No supported source code files were found.");
+    }
+    const totalSize = filesToAnalyze.reduce((total, file) =>
+      total + file.size,0
+    ) 
+    if (totalSize > 8 * 1024 * 1024) {
+       throw new Error(
+        "Selected source files exceed the 8 MB limit. Please select a smaller project."
+      );
+    }
+    const filesWithContent = await Promise.all(filesToAnalyze.map(async (file) => ({
+        path: file.webkitRelativePath
+        .split("/")
+        .slice(1)
+       .join("/"),
+       content : await file.text(),
+})));
+const response = await fetch("http://localhost:5000/api/analyzer",{
+  method: "POST",
+  headers :{
+    "Content-Type": "application/json",
+  },
+  body: JSON.stringify({
+    selectedFiles :filesWithContent,
+  }),
+})
+const result = await response.json();
+if (!response.ok || !result.success) {
+  throw new Error(result.message || "Project analysis failed.");
+}
+  setAnalysisResult(result.data);
+   console.log("Analysis successful:", result.data);
+
+  } catch (error) {
+    console.error("Project analysis failed:", error);
+    setScanError(
+       error.message || "Something went wrong during scanning."
+    );
+  } finally {
+    setIsScanning(false);
+  }
 }
 
   return (
@@ -166,12 +256,38 @@ function App() {
   )}
 
   <button
-    type="button"
-    disabled={selectedFiles.length === 0}
-    className="mt-4 rounded-xl bg-blue-600 px-6 py-3 text-sm font-medium text-white transition hover:bg-blue-500 disabled:cursor-not-allowed disabled:opacity-50"
-  >
-    Scan Local Project
-  </button>
+  type="button"
+  onClick={handleScanProject}
+  disabled={selectedFiles.length === 0 || isScanning}
+  className="mt-4 rounded-xl bg-blue-600 px-6 py-3 text-sm font-medium text-white transition hover:bg-blue-500 disabled:cursor-not-allowed disabled:opacity-50"
+>
+  {isScanning ? "Scanning Project..." : "Scan Local Project"}
+</button>
+{analysisResult && (
+  <div className="mt-6 rounded-xl border border-slate-700 bg-slate-950 p-4">
+    <h3 className="font-semibold text-white">
+      Analysis Complete
+    </h3>
+
+    <p className="mt-2 text-sm text-slate-300">
+      Total Files: {analysisResult.totalFiles}
+    </p>
+
+    <h4 className="mt-4 font-semibold text-white">
+      Language Counts
+    </h4>
+
+    <ul className="mt-2 text-sm text-slate-400">
+      {Object.entries(analysisResult?.languageCounts || {}).map(
+  ([language, count]) => (
+    <li key={language}>
+      {language}: {count} files
+    </li>
+  )
+)}
+    </ul>
+  </div>
+)}
 </section>
 
   {/* Project Statistics */}

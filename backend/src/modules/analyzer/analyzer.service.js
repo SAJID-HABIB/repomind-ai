@@ -232,17 +232,18 @@ async function analyzeSelectedFiles(selectedFiles) {
       ".ts",
       ".tsx",
     ];
-    if (sportExtention.includes(extension)) {
-      try {
-        const structure = analyzeJavaScriptSource(
-          sourceCode,
-          extension
-        );
-        Object.assign(fileResult, structure)
-      } catch (error) {
-        fileResult.analysisError = Error.message
-      }
-    }
+   if (supportedExtensions.includes(extension)) {
+  try {
+    const structure = analyzeJavaScriptSource(
+      sourceCode,
+      extension
+    );
+
+    Object.assign(fileResult, structure);
+  } catch (error) {
+    fileResult.analysisError = error.message;
+  }
+}
     files.push(fileResult);
     languageCounts [language] = (languageCounts[language] || 0 ) + 1; 
   }

@@ -8,14 +8,14 @@ console.log("Request Body:", req.body);
 const { repositoryPath, selectedFiles } = req.body ?? {};
 console.log("Received repositoryPath:", repositoryPath);
 if (Array.isArray(selectedFiles)) {
-    const result = analyzeSelectedFiles(selectedFiles);
+    const result = await analyzeSelectedFiles(selectedFiles);
     return res.status(200).json({
         success: true,
         message: "Selected project files analyzed successfully.",
         data: result,
     })
 }
-        if (typeof repositoryPath === "string" || repositoryPath.trim() !== "") {
+        if (typeof repositoryPath === "string" && repositoryPath.trim() !== "") {
             const result = await analyzeRepository(repositoryPath);
             return res.status(200).json({
         success: true,
