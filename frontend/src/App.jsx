@@ -26,9 +26,6 @@ function App() {
   ];
   const filteredFiles = files.filter((file) => {
     const pathParts = file.webkitRelativePath.split("/");
-    console.log("First selected file:", selectedFiles[0]);
-console.log("Received files count:", selectedFiles.length);
-
     return !pathParts.some((part) => excludedFolders.includes(part));
   })
   setSelectedFiles(filteredFiles);
@@ -39,14 +36,11 @@ console.log("Received files count:", selectedFiles.length);
   } else {
     setSelectedFolderName("");
   }
-   console.log("Total selected files:", files.length);
-   console.log("Files after filtering:", filteredFiles.length);
-
 }
 
 const handleScanProject  = async () => {
-  if (setSelectedFiles.length === 0) {
-    scanError("Please select a project folder first.");
+  if (selectedFiles.length === 0) {
+    setScanError("Please select a project folder first.");
     return
   }
   setIsScanning(true);
@@ -81,8 +75,14 @@ const handleScanProject  = async () => {
         fileName.endsWith(extension)
       );
     }) 
-       console.log("First file to analyze:", filesToAnalyze[0]);
-console.log("Files to analyze count:", filesToAnalyze.length);
+   console.log(
+  "Selected files after folder filtering:",
+  selectedFiles.length
+);
+console.log(
+  "Files selected for analysis:",
+  filesToAnalyze.map((file) => file.webkitRelativePath)
+);
     if (filesToAnalyze.length === 0) {
         throw new Error("No supported source code files were found.");
     }
@@ -100,7 +100,8 @@ console.log("Files to analyze count:", filesToAnalyze.length);
         .slice(1)
        .join("/"),
        content : await file.text(),
-})));
+})),
+);
 const response = await fetch("http://localhost:5000/api/analyzer",{
   method: "POST",
   headers :{
@@ -115,10 +116,12 @@ if (!response.ok || !result.success) {
   throw new Error(result.message || "Project analysis failed.");
 }
   setAnalysisResult(result.data);
-   console.log("Analysis successful:", result.data);
-
+console.log("Complete API response:", result);
+console.log("Analysis data:", result.data);
+console.log("Total analyzed files:", result.data.totalFiles);
+console.log("Language counts:", result.data.languageCounts);
+console.log("First analyzed file:", result.data.files?.[0]);
   } catch (error) {
-    console.error("Project analysis failed:", error);
     setScanError(
        error.message || "Something went wrong during scanning."
     );
@@ -286,6 +289,39 @@ if (!response.ok || !result.success) {
   )
 )}
     </ul>
+        {/* File Analysis Results */}
+    <h4 className="mt-6 font-semibold text-white">
+      File Analysis Results
+    </h4>
+
+    <div className="mt-3 space-y-3">
+      {(analysisResult.files || []).map((file) => (
+        <div
+          key={file.file}
+          className="rounded-lg border border-slate-700 p-3"
+        >
+          <p className="break-all text-sm font-medium text-white">
+            {file.file}
+          </p>
+
+          <p className="mt-1 text-sm text-slate-400">
+            Language: {file.language}
+          </p>
+
+          <p className="mt-2 text-sm text-slate-300">
+            Functions: {file.functions?.length ?? 0}
+          </p>
+
+          <p className="text-sm text-slate-300">
+            Classes: {file.classes?.length ?? 0}
+          </p>
+
+          <p className="text-sm text-slate-300">
+            Imports: {file.imports?.length ?? 0}
+          </p>
+        </div>
+      ))}
+    </div>
   </div>
 )}
 </section>
@@ -298,7 +334,10 @@ if (!response.ok || !result.success) {
 
   <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
     <StatCard title="Repositories" value="0" />
-    <StatCard title="Files Analyzed" value="0" />
+    <StatCard
+  title="Files Analyzed"
+  value={analysisResult?.totalFiles ?? 0}
+/>
     <StatCard title="API Endpoints" value="0" />
     <StatCard title="Code Connections" value="0" />
   </div>

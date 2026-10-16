@@ -59,6 +59,7 @@ if ([".jsx", ".tsx"].includes(extension)) {
   const functions = [];
   const classes = [];
   const imports = [];
+  const exports = [];
 
   function visit(node) {
     if (!node || typeof node !== "object") {
@@ -86,7 +87,25 @@ if ([".jsx", ".tsx"].includes(extension)) {
     if (node.type === "ImportDeclaration") {
       imports.push(node.source.value);
     }
-
+    if (node.type === "ExportNamedDeclaration") {
+      if (node.declaration) {
+        const declaration = node.declaration;
+        if (declaration.id?.name) {
+          exports.push(declaration.id.name)
+        } else if (declaration.declarations) {
+          for (const item of declaration.declarations) {
+            if (item.id?.name) {
+              exports.push(item.id.name);
+            }
+          }
+        }
+      }
+    }
+    for (const specifier of node.specifiers ?? []) {
+      if (specifier.exports.name?.name) {
+        exports.push(specifier.exported.name)
+      }
+    }
     for (const value of Object.values(node)) {
       if (Array.isArray(value)) {
         for (const item of value) {
@@ -96,12 +115,16 @@ if ([".jsx", ".tsx"].includes(extension)) {
         visit(value);
       }
     }
+    if (node.type === "ExportDefaultDeclaration") {
+      exports.push("default")
+    }
   }
   visit(ast.program);
   return {
     functions,
     classes,
     imports,
+    exports,
   };
 }
 async function scanDriectroies(driectroyPath, rootPath, results) {
@@ -195,7 +218,7 @@ async function analyzeSelectedFiles(selectedFiles) {
     if (typeof relativePath !== "string" || typeof sourceCode !== "string") {
       continue;
     }
-    const normalizedPath = relativePath.replaceAll("\\","//");
+    const normalizedPath = relativePath.replaceAll("\\","/");
     const pathParts = normalizedPath.split("/");
      if (
       pathParts.some(
