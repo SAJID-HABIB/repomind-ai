@@ -2,6 +2,7 @@ import fs from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { parse } from "@babel/parser";
+import { it } from "node:test";
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const ignoredDirectories = new Set([
@@ -92,7 +93,8 @@ if ([".jsx", ".tsx"].includes(extension)) {
         const declaration = node.declaration;
         if (declaration.id?.name) {
           exports.push(declaration.id.name)
-        } else if (declaration.declarations) {
+        } 
+         if (declaration.declarations) {
           for (const item of declaration.declarations) {
             if (item.id?.name) {
               exports.push(item.id.name);
@@ -101,10 +103,16 @@ if ([".jsx", ".tsx"].includes(extension)) {
         }
       }
     }
+    if (node.type === "ExportDefaultDeclaration") {
+  exports.push("default");
+}
     for (const specifier of node.specifiers ?? []) {
-      if (specifier.exports.name?.name) {
-        exports.push(specifier.exported.name)
-      }
+       const exportName =
+    specifier.exported?.name ?? specifier.exported?.value;
+
+  if (exportName) {
+    exports.push(exportName);
+  }
     }
     for (const value of Object.values(node)) {
       if (Array.isArray(value)) {
@@ -114,9 +122,6 @@ if ([".jsx", ".tsx"].includes(extension)) {
       } else if (value && typeof value === "object") {
         visit(value);
       }
-    }
-    if (node.type === "ExportDefaultDeclaration") {
-      exports.push("default")
     }
   }
   visit(ast.program);
