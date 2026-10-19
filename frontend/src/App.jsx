@@ -47,6 +47,8 @@ function App() {
     setIsScanning(true);
     setScanError("");
     setAnalysisResult(null);
+    setCurrentPage(1);
+    setExpandedFile(null);
     try {
       const supportedExtensions = [
         ".js",
@@ -310,7 +312,9 @@ function App() {
                       <p className="break-all text-sm font-medium text-white">
                         {file.file}
                       </p>
-
+                      <p className="mt-1 text-sm text-slate-400">
+                        Extention: {file.extension || "Unkown"}
+                      </p>
                       <p className="mt-1 text-sm text-slate-400">
                         Language: {file.language}
                       </p>
@@ -322,6 +326,17 @@ function App() {
                         <p className="mt-1 break-words text-sm text-slate-400">
                           Function Names: {file.functions.join(",")}
                         </p>
+                      )}
+                      {file.functionDetails?.length > 0 && (
+                        <div className="mt-2 space-y-2">
+                          <p className="text-sm font-semibold text-white">Function Parameters:</p>
+                          {file.functionDetails.map((func, index) => (
+                            <p key={`${func.name}${index}`}
+                             className="break-words text-sm text-slate-400">
+                              {func.name}({func.parameters?.join(", ")})
+                            </p>
+                          ))}
+                        </div>
                       )}
                       <p className="text-sm text-slate-300">
                         Classes: {file.classes?.length ?? 0}

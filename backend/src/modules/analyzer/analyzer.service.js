@@ -39,8 +39,40 @@ const sportExtention = {
   ".kt": "Kotlin",
   ".dart": "Dart",
 };
+function extractParameterNames(param) {
+  if (param.type === "Identifier") {
+    return [param.name];
+  }
 
- function analyzeJavaScriptSource(sourceCode, extension) {
+  if (param.type === "RestElement") {
+    return extractParameterNames(param.argument).map(
+      (name) => `...${name}`
+    );
+  }
+
+  if (param.type === "AssignmentPattern") {
+    return extractParameterNames(param.left);
+  }
+
+  if (param.type === "ObjectPattern") {
+    return param.properties.flatMap((property) => {
+      if (property.type === "RestElement") {
+        return extractParameterNames(property);
+      }
+
+      return extractParameterNames(property.value);
+    });
+  }
+
+  if (param.type === "ArrayPattern") {
+    return param.elements.flatMap((element) =>
+      element ? extractParameterNames(element) : []
+    );
+  }
+
+  return ["destructured"];
+}
+async function analyzeJavaScriptSource(sourceCode, extension) {
   // const sourceCode = await fs.readFile(filePath, "utf-8");
   const plugins = [];
 
@@ -58,6 +90,7 @@ if ([".jsx", ".tsx"].includes(extension)) {
   });
 
   const functions = [];
+  const functionDetails = [];
   const classes = [];
   const imports = [];
   const exports = [];
@@ -67,19 +100,29 @@ if ([".jsx", ".tsx"].includes(extension)) {
       return;
     }
 
-    if (node.type === "FunctionDeclaration" && node.id?.name) {
-      functions.push(node.id.name);
-    }
+   if (node.type === "FunctionDeclaration" && node.id?.name) {
+  functions.push(node.id.name);
+
+  functionDetails.push({
+    name: node.id.name,
+    parameters: node.params.flatMap(extractParameterNames),
+  });
+}
 
     if (
-      node.type === "VariableDeclarator" &&
-      node.id?.type === "Identifier" &&
-      ["ArrowFunctionExpression", "FunctionExpression"].includes(
-        node.init?.type,
-      )
-    ) {
-      functions.push(node.id.name);
-    }
+  node.type === "VariableDeclarator" &&
+  node.id?.type === "Identifier" &&
+  ["ArrowFunctionExpression", "FunctionExpression"].includes(
+    node.init?.type,
+  )
+) {
+  functions.push(node.id.name);
+
+  functionDetails.push({
+    name: node.id.name,
+    parameters: node.init.params.flatMap(extractParameterNames),
+  });
+}
 
     if (node.type === "ClassDeclaration" && node.id?.name) {
       classes.push(node.id.name);
@@ -104,7 +147,9 @@ if ([".jsx", ".tsx"].includes(extension)) {
       }
     }
     if (node.type === "ExportDefaultDeclaration") {
-  exports.push("default");
+      const decleration = node.declaration;
+      const exportName = decleration?.id?.name || decleration?.declarations?.[0]?.id?.name;
+  exports.push(exportName ? `default ${exportName}`: "default");
 }
     for (const specifier of node.specifiers ?? []) {
        const exportName =
@@ -127,6 +172,7 @@ if ([".jsx", ".tsx"].includes(extension)) {
   visit(ast.program);
   return {
     functions,
+    functionDetails,
     classes,
     imports,
     exports,
@@ -181,7 +227,8 @@ async function scanDriectroies(driectroyPath, rootPath, results) {
 
     if (supportedExtensions.includes(extension)) {
       try {
-        const structure = await analyzeJavaScriptFile(fullPath, extension);
+        const sourceCode = await fs.readFile(fullPath, "utf-8");
+        const structure = await analyzeJavaScriptSource(sourceCode, extension);
         Object.assign(fileResult, structure);
       } catch (error) {
         fileResult.analysisError = error.message;
