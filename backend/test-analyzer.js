@@ -12,7 +12,7 @@ async function testAnalyzer() {
     const result = await analyzeRepository(repositoryPath);
     console.log("Analysis result:", result);
   } catch (error) {
-    console.error("Analysis failed:", error.message);
+    console.error("Analysis failed:", error);
   }
 }
 

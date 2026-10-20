@@ -299,111 +299,125 @@ function App() {
                 </h4>
 
                 <div className="mt-3 space-y-3">
-                  {currentFiles.map((file) => (
-                    <div
-                      key={file.file}
-                      onClick={() =>
-                        setExpandedFile(
-                          expandedFile === file.file ? null : file.file,
-                        )
-                      }
-                      className="rounded-lg border border-slate-700 p-3"
-                    >
-                      <p className="break-all text-sm font-medium text-white">
-                        {file.file}
-                      </p>
-                      <p className="mt-1 text-sm text-slate-400">
-                        Extention: {file.extension || "Unkown"}
-                      </p>
-                      <p className="mt-1 text-sm text-slate-400">
-                        Language: {file.language}
-                      </p>
+                  {files.length === 0 ? (
+                    <p>No file avalible for the analysis.</p>
+                  ) : (
+                    currentFiles.map((file) => (
+                      <div
+                        key={file.file}
+                        onClick={() =>
+                          setExpandedFile(
+                            expandedFile === file.file ? null : file.file,
+                          )
+                        }
+                        className="rounded-lg border border-slate-700 p-3"
+                      >
+                        <p className="break-all text-sm font-medium text-white">
+                          {file.file}
+                        </p>
+                        <p className="mt-1 text-sm text-slate-400">
+                          Extension: {file.extension || "Unkown"}
+                        </p>
+                        <p className="mt-1 text-sm text-slate-400">
+                          Language: {file.language}
+                        </p>
+                        {file.analysisError && (
+                          <p className="mt-2 wrap-break-words text-sm text-red-400">
+                            Analysis Error: {file.analysisError}
+                          </p>
+                        )}
+                        <p className="mt-2 text-sm text-slate-300">
+                          Functions: {file.functions?.length ?? 0}
+                        </p>
+                        {file.functions?.length > 0 && (
+                          <p className="mt-1 wrap-break-words text-sm text-slate-400">
+                            Function Names: {file.functions.join(",")}
+                          </p>
+                        )}
+                        {file.functionDetails?.length > 0 && (
+                          <div className="mt-2 space-y-2">
+                            <p className="text-sm font-semibold text-white">
+                              Function Parameters:
+                            </p>
+                            {file.functionDetails.map((func, index) => (
+                              <p
+                                key={`${func.name}${index}`}
+                                className="wrap-break-words text-sm text-slate-400"
+                              >
+                                {func.name}({func.parameters?.join(", ")})
+                              </p>
+                            ))}
+                          </div>
+                        )}
+                        <p className="text-sm text-slate-300">
+                          Classes: {file.classes?.length ?? 0}
+                        </p>
+                        {file.classes?.length > 0 && (
+                          <p className="mt-1 wrap-break-words text-sm text-slate-400">
+                            Class Names: {file.classes.join(",")}
+                          </p>
+                        )}
 
-                      <p className="mt-2 text-sm text-slate-300">
-                        Functions: {file.functions?.length ?? 0}
-                      </p>
-                      {file.functions?.length > 0 && (
-                        <p className="mt-1 break-words text-sm text-slate-400">
-                          Function Names: {file.functions.join(",")}
+                        <p className="text-sm text-slate-300">
+                          Imports: {file.imports?.length ?? 0}
                         </p>
-                      )}
-                      {file.functionDetails?.length > 0 && (
-                        <div className="mt-2 space-y-2">
-                          <p className="text-sm font-semibold text-white">Function Parameters:</p>
-                          {file.functionDetails.map((func, index) => (
-                            <p key={`${func.name}${index}`}
-                             className="break-words text-sm text-slate-400">
-                              {func.name}({func.parameters?.join(", ")})
-                            </p>
-                          ))}
-                        </div>
-                      )}
-                      <p className="text-sm text-slate-300">
-                        Classes: {file.classes?.length ?? 0}
-                      </p>
-                      {file.classes?.length > 0 && (
-                        <p className="mt-1 break-words text-sm text-slate-400">
-                          Class Names: {file.classes.join(",")}
-                        </p>
-                      )}
-
-                      <p className="text-sm text-slate-300">
-                        Imports: {file.imports?.length ?? 0}
-                      </p>
-                      {file.imports?.length > 0 && (
-                        <p className="mt-1 break-words text-sm text-slate-400">
-                          Import Names: {file.imports.join(", ")}
-                        </p>
-                      )}
-                      {expandedFile === file.file && (
-                        <div className="mt-4 space-y-3 border-t border-slate-700 pt-3">
-                          <div>
-                            <h5 className="text-sm font-semibold text-white">
-                              Function Names :
-                            </h5>
-                            <p className="text-sm text-slate-400">
-                              {file.functions?.length
-                                ? file.functions.join(",")
-                                : "None detected"}
-                            </p>
+                        {file.imports?.length > 0 && (
+                          <p className="mt-1 wrap-break-words text-sm text-slate-400">
+                            Import Names: {file.imports.join(", ")}
+                          </p>
+                        )}
+                        {expandedFile === file.file && (
+                          <div className="mt-4 space-y-3 border-t border-slate-700 pt-3">
+                            <div>
+                              <h5 className="text-sm font-semibold text-white">
+                                Function Names :
+                              </h5>
+                              <p className="text-sm text-slate-400">
+                                {file.functions?.length
+                                  ? file.functions.join(",")
+                                  : "None detected"}
+                              </p>
+                            </div>
+                            <div>
+                              <h5 className="text-sm font-semibold text-white">
+                                Class Names :
+                              </h5>
+                              <p className="text-sm text-slate-400">
+                                {file.classes?.length
+                                  ? file.classes.join(",")
+                                  : "None detected"}
+                              </p>
+                            </div>
+                            <div>
+                              <h5 className="text-sm font-semibold text-white">
+                                Imports :
+                              </h5>
+                              <p className="text-sm text-slate-400">
+                                {file.imports?.length
+                                  ? file.imports.join(",")
+                                  : "None detected"}
+                              </p>
+                            </div>
+                            <div>
+                              <h5 className="text-sm font-semibold text-white">
+                                Export :
+                              </h5>
+                              <p className="text-sm text-slate-400">
+                                {file.exports?.length
+                                  ? file.exports.join(",")
+                                  : "None detected"}
+                              </p>
+                            </div>
                           </div>
-                          <div>
-                            <h5 className="text-sm font-semibold text-white">
-                              Class Names :
-                            </h5>
-                            <p className="text-sm text-slate-400">
-                              {file.classes?.length
-                                ? file.classes.join(",")
-                                : "None detected"}
-                            </p>
-                          </div>
-                          <div>
-                            <h5 className="text-sm font-semibold text-white">
-                              Imports :
-                            </h5>
-                            <p className="text-sm text-slate-400">
-                              {file.imports?.length
-                                ? file.imports.join(",")
-                                : "None detected"}
-                            </p>
-                          </div>
-                          <div>
-                            <h5 className="text-sm font-semibold text-white">
-                              Export :
-                            </h5>
-                            <p className="text-sm text-slate-400">
-                              {file.exports?.length
-                                ? file.exports.join(",")
-                                : "None detected"}
-                            </p>
-                          </div>
-                        </div>
-                      )}
-                    </div>
-                  ))}
+                        )}
+                      </div>
+                    ))
+                  )}
                   <div className="flex items-center justify-center gap-4 mt-6">
                     <button
-                      onClick={() => setCurrentPage((prev) => prev - 1)}
+                      onClick={() =>
+                        setCurrentPage((prev) => Math.max(1, prev - 1))
+                      }
                       disabled={currentPage === 1}
                       className="px-4 py-2 rounded bg-slate-700 text-white disabled:opacity-40"
                     >
@@ -415,8 +429,10 @@ function App() {
                     </span>
 
                     <button
-                      onClick={() => setCurrentPage((prev) => prev + 1)}
-                      disabled={currentPage === totalPages}
+                      onClick={() =>
+                        setCurrentPage((prev) => Math.min(totalPages, prev + 1))
+                      }
+                      disabled={currentPage >= totalPages}
                       className="px-4 py-2 rounded bg-blue-600 text-white disabled:opacity-40"
                     >
                       Next

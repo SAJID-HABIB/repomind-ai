@@ -1,3 +1,4 @@
+import { User } from "./User.js";
 function greet(name) {
   return `Hello ${name}`;
 }
@@ -33,3 +34,9 @@ const multiply = function (a, b) {
 function createUser({ profile: { name } }) {
   return name;
 }
+
+export const name = "Sajid";
+export { Navbar as Header };
+
+export { User } from "./User.js";
+export * from "./User.js";

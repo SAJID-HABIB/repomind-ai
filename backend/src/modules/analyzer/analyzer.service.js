@@ -39,6 +39,40 @@ const sportExtention = {
   ".kt": "Kotlin",
   ".dart": "Dart",
 };
+function resolveLocalDependency(importerPath, importeSource, filePaths) {
+  if (!importeSource.startsWith(".")) {
+    return null;
+  }
+  const importerDirectory = path.posix.dirname(
+    importerPath.replace(/\\/g,"/")
+  );
+  const targetPath = path.posix.normalize(path.posix.join(importerDirectory, importeSource));
+  const extensions = [
+    "",
+    ".js",
+    ".jsx",
+    ".mjs",
+    ".cjs",
+    ".ts",
+    ".tsx",
+  ];
+  for (const extension of extensions) {
+    const candidate = `${targetPath}${extension}`;
+    if (filePaths.has(candidate)) {
+      return candidate;
+    }
+  }
+  for (const extension of extensions.slice(1)) {
+    const candidate = path.posix.join(
+      targetPath,
+      `index${extension}`
+    );
+    if (filePaths.has(candidate)) {
+      return candidate;
+    }
+  }
+  return null;
+}
 function extractParameterNames(param) {
   if (param.type === "Identifier") {
     return [param.name];
@@ -132,6 +166,9 @@ if ([".jsx", ".tsx"].includes(extension)) {
       imports.push(node.source.value);
     }
     if (node.type === "ExportNamedDeclaration") {
+      if (node.source) {
+        imports.push(node.source.value);
+      }
       if (node.declaration) {
         const declaration = node.declaration;
         if (declaration.id?.name) {
@@ -148,8 +185,13 @@ if ([".jsx", ".tsx"].includes(extension)) {
     }
     if (node.type === "ExportDefaultDeclaration") {
       const decleration = node.declaration;
-      const exportName = decleration?.id?.name || decleration?.declarations?.[0]?.id?.name;
+      const exportName = decleration?.id?.name || decleration?.declarations?.[0]?.id?.name
+      ||
+    (decleration?.type === "Identifier" ? decleration.name : null);
   exports.push(exportName ? `default ${exportName}`: "default");
+}
+if (node.type === "ExportAllDeclaration" && node.source) {
+  exports.push(`* from ${node.source.value}`);
 }
     for (const specifier of node.specifiers ?? []) {
        const exportName =
@@ -247,6 +289,24 @@ async function analyzeRepository(repositoryPath) {
 
   const files = [];
   await scanDriectroies(rootPath, rootPath, files);
+  const filePath = new Set(files.map((file) => file.file.replace(/\\/g,"/"))
+);
+for (const file of files) {
+  file.dependencies = [];
+  if (!Array.isArray(file.imports)) {
+    continue;
+  }
+  for (const importeSource of file.imports) {
+    const dependency = resolveLocalDependency(
+      file.file,
+      importeSource,
+      filePath,
+    );
+    if (dependency && !file.dependencies.includes(dependency)) {
+      file.dependencies.push(dependency);
+    }
+  }
+}
   const languageCounts = {};
   for (const file of files) {
     languageCounts[file.language] = (languageCounts[file.language] || 0) + 1;
