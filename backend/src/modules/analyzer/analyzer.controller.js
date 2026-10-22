@@ -2,11 +2,7 @@ import { analyzeRepository, analyzeSelectedFiles } from "./analyzer.service.js";
 
 async function analyzeRepositoryController(req,res) {
     try {
-      console.log("Content-Type:", req.headers["content-type"]);
-console.log("Request Body:", req.body);
-
 const { repositoryPath, selectedFiles } = req.body ?? {};
-console.log("Received repositoryPath:", repositoryPath);
 if (Array.isArray(selectedFiles)) {
     const result = await analyzeSelectedFiles(selectedFiles);
     return res.status(200).json({
@@ -29,9 +25,20 @@ if (Array.isArray(selectedFiles)) {
                 message: "Provide selectedFiles or a valid repositoryPath."
             });
     } catch (error) {
-        return res.status(400).json({
+        const clientErrors = [
+              "No files were provided for analysis.",
+            "No supported files were found for analysis.",
+            "The repository path must be a directory.",
+        ];
+        if (clientErrors.includes(error.message)) {
+            return res.status(400).json({
+                success: false,
+                message: error.message,
+            })
+        }
+        return res.status(500).json({
             success: false,
-            message: error.message,
+            message: "An unexpected error occurred during analysis.",
         })
     }
 }
