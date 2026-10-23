@@ -1,11 +1,11 @@
 import path from "node:path";
 
-function resolveLocalDependency(importerPath, importeSource, filePaths) {
+function resolveLocalDependency(importSource, importeSource, filePaths) {
   if (!importeSource.startsWith(".")) {
     return null;
   }
   const importerDirectory = path.posix.dirname(
-    importerPath.replace(/\\/g, "/"),
+    importSource.replace(/\\/g, "/"),
   );
   const targetPath = path.posix.normalize(
     path.posix.join(importerDirectory, importeSource),
