@@ -31,6 +31,10 @@ const supportedExtensions = {
   ".swift": "Swift",
   ".kt": "Kotlin",
   ".dart": "Dart",
+  ".html": "HTML",
+  ".css": "CSS",
+  ".json": "JSON",
+  ".md": "Markdown",
 };
 
 export { ignoredDirectories, supportedExtensions };

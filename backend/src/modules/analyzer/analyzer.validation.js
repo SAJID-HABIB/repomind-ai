@@ -1,26 +1,24 @@
 function validateAnalyzerRequest(body) {
-    const {repositoryPath, selectedFiles} = body??{};
-    if (Array.isArray(selectedFiles)) {
-        if (selectedFiles.length === 0) {
-            return {
-                valid: false,
-                message: "No files were provided for analysis.",
-            }
-        }
-        return {
-            valid: true,
-            type: "selectedFiles",
-        }
-    }
-     if (typeof repositoryPath === "string" && repositoryPath.trim() !== "") {
-            return {
-                valid: true,
-                type: "repositoryPath",
-            }
-        }
-        return {
-            valid:false,
-            message: "Provide selectedFiles or a valid repositoryPath.",
-        }
+  const { repositoryPath, selectedFiles, repositoryUrl } = body ?? {};
+  if (typeof repositoryUrl === "string" && repositoryUrl.trim() !== "") {
+  return {
+    valid: true,
+    type: "repositoryUrl",
+  };
 }
-export  {validateAnalyzerRequest};
+
+if (Array.isArray(selectedFiles)) {
+  if (typeof repositoryPath === "string" && repositoryPath.trim() !== "") {
+    return {
+      valid: true,
+      type: "repositoryPath",
+    };
+  }
+  return {
+    valid: false,
+    message:
+      "Provide selectedFiles, a valid repositoryPath, or a GitHub repository URL.",
+  };
+}
+}
+export { validateAnalyzerRequest };

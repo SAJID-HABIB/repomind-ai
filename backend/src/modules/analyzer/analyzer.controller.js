@@ -1,26 +1,19 @@
 import { analyzeRepository, analyzeSelectedFiles } from "./analyzer.service.js";
 import { validateAnalyzerRequest } from "./analyzer.validation.js";
+import { analyzeGitHubRepository } from "./services/githubRepository.service.js";
 
 async function analyzeRepositoryController(req, res) {
   try {
-    const { repositoryPath, selectedFiles } = req.body ?? {};
+    const { repositoryPath, selectedFiles, repositoryUrl} = req.body ?? {};
     const validation = validateAnalyzerRequest(req.body);
     if (!validation.valid) {
-        return res.status(400).json({
-            success: false,
-            message: validation.message,
-        })
-    }
-    if (Array.isArray(selectedFiles)) {
-      const result = await analyzeSelectedFiles(selectedFiles);
-      return res.status(200).json({
-        success: true,
-        message: "Selected project files analyzed successfully.",
-        data: result,
+      return res.status(400).json({
+        success: false,
+        message: validation.message,
       });
     }
-    if (typeof repositoryPath === "string" && repositoryPath.trim() !== "") {
-      const result = await analyzeRepository(repositoryPath);
+    if (typeof repositoryUrl === "string" && repositoryUrl.trim() !== "") {
+      const result = await analyzeGitHubRepository(repositoryUrl);
       return res.status(200).json({
         success: true,
         message: "Repository scanned successfully.",
@@ -28,11 +21,22 @@ async function analyzeRepositoryController(req, res) {
       });
     }
 
+    if (Array.isArray(selectedFiles)) {
+  const result = await analyzeSelectedFiles(selectedFiles);
+
+  return res.status(200).json({
+    success: true,
+    message: "Selected project files analyzed successfully.",
+    data: result,
+  });
+}
+
     return res.status(400).json({
       success: false,
       message: "Provide selectedFiles or a valid repositoryPath.",
     });
   } catch (error) {
+    console.error("GitHub analysis error:", error);
     const clientErrors = [
       "No files were provided for analysis.",
       "No supported files were found for analysis.",
@@ -51,4 +55,4 @@ async function analyzeRepositoryController(req, res) {
   }
 }
 
-export  { analyzeRepositoryController };
+export { analyzeRepositoryController };
