@@ -7,18 +7,23 @@ function validateAnalyzerRequest(body) {
   };
 }
 
-if (Array.isArray(selectedFiles)) {
-  if (typeof repositoryPath === "string" && repositoryPath.trim() !== "") {
-    return {
-      valid: true,
-      type: "repositoryPath",
-    };
-  }
+if (Array.isArray(selectedFiles) && selectedFiles.length > 0) {
   return {
+    valid: true,
+    type: "selectedFiles",
+  };
+}
+
+if (typeof repositoryPath === "string" && repositoryPath.trim() !== "") {
+  return {
+    valid: true,
+    type: "repositoryPath",
+  };
+}
+return {
     valid: false,
     message:
       "Provide selectedFiles, a valid repositoryPath, or a GitHub repository URL.",
   };
-}
 }
 export { validateAnalyzerRequest };

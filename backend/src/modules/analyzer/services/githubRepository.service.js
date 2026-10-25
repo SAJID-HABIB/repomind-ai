@@ -17,7 +17,6 @@ async function fetchGitHubJson(url) {
     },
   });
   if (!response.ok) {
-    console.log("GitHub API response:", response.status, url);
     if (response.status === 400) {
       throw new Error(
         "GitHub repository or branch was not found, or the repository is private.",
@@ -43,7 +42,6 @@ function shouldIgnorePath(filePath) {
 
 function parseGitHubUrl(repositoryUrl) {
   let url;
-  console.log("GitHub URL received:", repositoryUrl);
   try {
     url = new URL(repositoryUrl);
   } catch (error) {
@@ -75,7 +73,6 @@ function parseGitHubUrl(repositoryUrl) {
 async function analyzeGitHubRepository(repositoryUrl) {
   const { owner, repository } = parseGitHubUrl(repositoryUrl);
   const repositoryApiUrl = `https://api.github.com/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repository)}`;
-  console.log("GitHub API URL:", repositoryApiUrl);
   const repositoryInfo = await fetchGitHubJson(repositoryApiUrl);
   const branch = repositoryInfo.default_branch;
   if (!branch) {
@@ -88,9 +85,6 @@ async function analyzeGitHubRepository(repositoryUrl) {
       "This repository is too large to scan completely in one request.",
     );
   }
-  console.log("", repository.full_name);
-  console.log("defualt branch", branch);
-  console.log("total tree entries", treeData.tree.length);
 
   const sourceFiles = treeData.tree.filter((item) => {
     if (item.type !== "blob" || shouldIgnorePath(item.path)) {
@@ -102,40 +96,6 @@ async function analyzeGitHubRepository(repositoryUrl) {
     return Boolean(supportedExtensions[extension]);
   });
 
-    console.log(
-  "All files outside ignored paths:",
-  treeData.tree.filter(
-    (item) =>
-      item.type === "blob" &&
-      !shouldIgnorePath(item.path),
-  ).length,
-);
-
-console.log(
-  "Unsupported file extensions:",
-  treeData.tree.filter((item) => {
-    if (item.type !== "blob" || shouldIgnorePath(item.path)) {
-      return false;
-    }
-
-    const extension = item.path
-      .slice(item.path.lastIndexOf("."))
-      .toLowerCase();
-
-    return !supportedExtensions[extension];
-  }).length,
-);
-
-console.log(
-  "Files outside ignored paths:",
-  treeData.tree
-    .filter(
-      (item) =>
-        item.type === "blob" &&
-        !shouldIgnorePath(item.path),
-    )
-    .map((item) => item.path),
-);
 
   if (sourceFiles.length > MAX_FILES) {
     throw new Error(`This repository contains more than ${MAX_FILES} supported files. Please use a smaller repository.`,);
@@ -143,7 +103,6 @@ console.log(
   const selectedFile = sourceFiles.filter(
     (file) => (file.size ?? 0) <= MAX_FILES_SIZE,
   );
-    console.log("Selected files after size filtering:", selectedFile.length);
   if (selectedFile.length === 0) {
     throw new Error("No source files are within the 1 MB per-file limit.");
   }
@@ -158,7 +117,6 @@ console.log(
   }
   const files = [];
   for (const sourceFiles of selectedFile) {
-    console.log("Processing file:", sourceFiles.path);
     const rawUrl = `https://raw.githubusercontent.com/${encodeURIComponent(owner)}/${encodeURIComponent(repository)}/${encodeURIComponent(branch)}/${sourceFiles.path.split("/").map(encodeURIComponent).join("/")}`;
   const response = await fetch(rawUrl, {
   signal: AbortSignal.timeout(15000),
@@ -167,6 +125,8 @@ console.log(
     throw new Error(`Could not retrieve source file: ${sourceFiles.path}`);
   }
   const sourceCode = await response.text();
+  if (sourceFiles.path === "package.json") {
+}
      const extension = sourceFiles.path
       .slice(sourceFiles.path.lastIndexOf("."))
       .toLowerCase();
@@ -175,6 +135,15 @@ console.log(
     extension,
     language: supportedExtensions[extension],
   };
+  if (sourceFiles.path.endsWith("package.json")) {
+    try {
+      const packageData = JSON.parse(sourceCode);
+      fileResult.packageDependencies = packageData.dependencies || {};
+      fileResult.devDependencies = packageData.devDependencies || {};
+    } catch (error) {
+      fileResult.analysisError = error.message;
+    }
+  }
      const javascriptExtensions = [
       ".js",
       ".jsx",

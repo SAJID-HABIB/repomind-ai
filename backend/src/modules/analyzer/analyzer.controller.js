@@ -1,6 +1,7 @@
 import { analyzeRepository, analyzeSelectedFiles } from "./analyzer.service.js";
 import { validateAnalyzerRequest } from "./analyzer.validation.js";
 import { analyzeGitHubRepository } from "./services/githubRepository.service.js";
+import { buildDependencyGraph } from "./services/dependencyGraph.service.js";
 
 async function analyzeRepositoryController(req, res) {
   try {
@@ -14,6 +15,7 @@ async function analyzeRepositoryController(req, res) {
     }
     if (typeof repositoryUrl === "string" && repositoryUrl.trim() !== "") {
       const result = await analyzeGitHubRepository(repositoryUrl);
+      result.dependencyGraph = buildDependencyGraph(result.files);
       return res.status(200).json({
         success: true,
         message: "Repository scanned successfully.",
@@ -23,6 +25,7 @@ async function analyzeRepositoryController(req, res) {
 
     if (Array.isArray(selectedFiles)) {
   const result = await analyzeSelectedFiles(selectedFiles);
+  result.dependencyGraph = buildDependencyGraph(result.files);
 
   return res.status(200).json({
     success: true,
@@ -36,7 +39,7 @@ async function analyzeRepositoryController(req, res) {
       message: "Provide selectedFiles or a valid repositoryPath.",
     });
   } catch (error) {
-    console.error("GitHub analysis error:", error);
+    console.error("Analyzer Controller Error:", error);
     const clientErrors = [
       "No files were provided for analysis.",
       "No supported files were found for analysis.",
