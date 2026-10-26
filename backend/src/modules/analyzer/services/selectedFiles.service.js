@@ -5,7 +5,7 @@ import {
 } from "../constants/analyzer.constants.js";
 import { analyzeJavaScriptSource } from "../parsers/javascript.parser.js";
 
- async function analyzeSelectedFiles(selectedFiles) {
+async function analyzeSelectedFiles(selectedFiles) {
   if (!Array.isArray(selectedFiles) || selectedFiles.length === 0) {
     throw new Error("No files were provided for analysis.");
   }
@@ -67,5 +67,5 @@ import { analyzeJavaScriptSource } from "../parsers/javascript.parser.js";
     files,
   };
 }
- 
-export {analyzeSelectedFiles};
+
+export { analyzeSelectedFiles };

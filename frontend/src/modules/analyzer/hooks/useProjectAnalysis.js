@@ -1,24 +1,28 @@
 import { useState } from "react";
-import analyzeSelectedFiles from "../api/analyzer.api";
-import filterSupportedFiles from "../utils/analyzer.utils";
+import analyzeSelectedFiles, {
+  analyzeGitHubRepository,
+} from "../api/analyzer.api";
+import filterSupportedFiles from "../utils/analyzer.utils.js";
 
 function useProjectAnalysis({
   selectedFiles,
   setCurrentPage,
   setExpandedFile,
 }) {
-  const [isScanning, setIsScanning] = useState(false);
-  const [scanError, setScanError] = useState("");
+  const [isLocalScanning, setIsLocalScanning] = useState(false);
+  const [isGitHubScanning, setIsGitHubScanning] = useState(false);
+  const [localScanError, setLocalScanError] = useState("");
+  const [githubScanError, setGithubScanError] = useState("");
   const [analysisResult, setAnalysisResult] = useState(null);
 
   const handleScanProject = async () => {
     if (selectedFiles.length === 0) {
-      setScanError("Please select a project folder first.");
+      setLocalScanError("Please select a project folder first.");
       return;
     }
 
-    setIsScanning(true);
-    setScanError("");
+    setIsLocalScanning(true);
+    setLocalScanError("");
     setAnalysisResult(null);
     setCurrentPage(1);
     setExpandedFile(null);
@@ -52,17 +56,45 @@ function useProjectAnalysis({
 
       setAnalysisResult(result.data);
     } catch (error) {
-      setScanError(error.message || "Something went wrong during scanning.");
+      setLocalScanError(
+        error.message || "Something went wrong during scanning.",
+      );
     } finally {
-      setIsScanning(false);
+      setIsLocalScanning(false);
+    }
+  };
+
+  const handleScanGitHubRepository = async (repositoryUrl) => {
+    if (!repositoryUrl.trim()) {
+      setGithubScanError("Please enter a GitHub repository URL.");
+      return;
+    }
+    setIsGitHubScanning(true);
+    setGithubScanError("");
+    setAnalysisResult(null);
+    setCurrentPage(1);
+    setExpandedFile(null);
+    try {
+      const result = await analyzeGitHubRepository(repositoryUrl.trim());
+      setAnalysisResult(result.data);
+    } catch (error) {
+      setGithubScanError(
+        error.message ||
+          "Something went wrong while scanning the GitHub repository.",
+      );
+    } finally {
+      setIsGitHubScanning(false);
     }
   };
 
   return {
-    isScanning,
-    scanError,
+    isLocalScanning,
+    isGitHubScanning,
+    localScanError,
+    githubScanError,
     analysisResult,
     handleScanProject,
+    handleScanGitHubRepository,
   };
 }
 

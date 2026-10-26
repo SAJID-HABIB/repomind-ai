@@ -5,7 +5,7 @@ import { buildDependencyGraph } from "./services/dependencyGraph.service.js";
 
 async function analyzeRepositoryController(req, res) {
   try {
-    const { repositoryPath, selectedFiles, repositoryUrl} = req.body ?? {};
+    const { repositoryPath, selectedFiles, repositoryUrl } = req.body ?? {};
     const validation = validateAnalyzerRequest(req.body);
     if (!validation.valid) {
       return res.status(400).json({
@@ -24,15 +24,15 @@ async function analyzeRepositoryController(req, res) {
     }
 
     if (Array.isArray(selectedFiles)) {
-  const result = await analyzeSelectedFiles(selectedFiles);
-  result.dependencyGraph = buildDependencyGraph(result.files);
+      const result = await analyzeSelectedFiles(selectedFiles);
+      result.dependencyGraph = buildDependencyGraph(result.files);
 
-  return res.status(200).json({
-    success: true,
-    message: "Selected project files analyzed successfully.",
-    data: result,
-  });
-}
+      return res.status(200).json({
+        success: true,
+        message: "Selected project files analyzed successfully.",
+        data: result,
+      });
+    }
 
     return res.status(400).json({
       success: false,

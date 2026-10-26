@@ -23,9 +23,7 @@ function Navbar({ onMenuClick }) {
             Welcome back! Explore your codebase.
           </p>
 
-          <p className="text-xs text-slate-500 sm:hidden">
-            Welcome back!
-          </p>
+          <p className="text-xs text-slate-500 sm:hidden">Welcome back!</p>
         </div>
       </div>
 
@@ -53,7 +51,6 @@ function Navbar({ onMenuClick }) {
           className="relative flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-slate-800 text-lg text-slate-400 transition hover:bg-slate-900 hover:text-white"
         >
           ♧
-
           <span className="absolute right-2 top-2 h-2 w-2 rounded-full bg-blue-500" />
         </button>
 
@@ -64,13 +61,9 @@ function Navbar({ onMenuClick }) {
           </div>
 
           <div className="hidden lg:block">
-            <p className="text-sm font-medium text-white">
-              Developer
-            </p>
+            <p className="text-sm font-medium text-white">Developer</p>
 
-            <p className="text-xs text-slate-500">
-              Free Plan
-            </p>
+            <p className="text-xs text-slate-500">Free Plan</p>
           </div>
         </div>
       </div>

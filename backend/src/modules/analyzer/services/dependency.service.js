@@ -26,4 +26,4 @@ function resolveLocalDependency(importSource, importeSource, filePaths) {
   return null;
 }
 
-export {resolveLocalDependency};
+export { resolveLocalDependency };

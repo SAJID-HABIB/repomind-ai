@@ -19,9 +19,7 @@ function Sidebar() {
           <h1 className="whitespace-nowrap text-lg font-bold text-white">
             RepoMind AI
           </h1>
-          <p className="mt-1 text-xs text-slate-500">
-            Code Intelligence
-          </p>
+          <p className="mt-1 text-xs text-slate-500">Code Intelligence</p>
         </div>
       </div>
 

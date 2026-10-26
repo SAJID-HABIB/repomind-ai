@@ -8,6 +8,7 @@ import useProjectAnalysis from "./modules/analyzer/hooks/useProjectAnalysis";
 import ProjectStatistics from "./components/dashboard/ProjectStatistics";
 import RecentProjects from "./components/dashboard/RecentProjects";
 import AnalyzeLocalFolder from "./modules/analyzer/components/AnalyzeLocalFolder";
+import AnalyzeGitHubRepository from "./modules/analyzer/components/AnalyzeGitHubRepository";
 import "./App.css";
 function App() {
   const [isSideBarOpen, setIsSideBarOpen] = useState(false);
@@ -15,12 +16,19 @@ function App() {
     useProjectFiles();
   const [expandedFile, setExpandedFile] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
-  const { isScanning, scanError, analysisResult, handleScanProject } =
-    useProjectAnalysis({
-      selectedFiles,
-      setCurrentPage,
-      setExpandedFile,
-    });
+  const {
+    isLocalScanning,
+    isGitHubScanning,
+    localScanError,
+    githubScanError,
+    analysisResult,
+    handleScanProject,
+    handleScanGitHubRepository,
+  } = useProjectAnalysis({
+    selectedFiles,
+    setCurrentPage,
+    setExpandedFile,
+  });
   const filesPerPage = 5;
   const files = analysisResult?.files || [];
   const totalPages = Math.ceil(files.length / filesPerPage);
@@ -77,28 +85,35 @@ function App() {
           </div>
 
           {/* Analyze Repository */}
+
+          <AnalyzeGitHubRepository
+            handleScanGitHubRepository={handleScanGitHubRepository}
+            isScanning={isGitHubScanning}
+            scanError={githubScanError}
+          />
+
           <AnalyzeLocalFolder
             selectedFiles={selectedFiles}
             selectedFolderName={selectedFolderName}
             handleFolderChange={handleFolderChange}
             handleScanProject={handleScanProject}
-            isScanning={isScanning}
-            scanError={scanError}
+            isScanning={isLocalScanning}
+            scanError={localScanError}
           />
-          
-            {/* File Analysis Results */}
-            {analysisResult && (
-              <FileAnalysisResults
-                analysisResult={analysisResult}
-                files={files}
-                currentFiles={currentFiles}
-                currentPage={currentPage}
-                totalPages={totalPages}
-                expandedFile={expandedFile}
-                setExpandedFile={setExpandedFile}
-                setCurrentPage={setCurrentPage}
-              />
-            )}
+
+          {/* File Analysis Results */}
+          {analysisResult && (
+            <FileAnalysisResults
+              analysisResult={analysisResult}
+              files={files}
+              currentFiles={currentFiles}
+              currentPage={currentPage}
+              totalPages={totalPages}
+              expandedFile={expandedFile}
+              setExpandedFile={setExpandedFile}
+              setCurrentPage={setCurrentPage}
+            />
+          )}
 
           <ProjectStatistics totalFiles={analysisResult?.totalFiles ?? 0} />
 
