@@ -1,14 +1,14 @@
 import { useState } from "react";
+import { Routes, Route, Navigate } from "react-router-dom";
 import Sidebar from "./components/layout/Sidebar";
 import Navbar from "./components/layout/Navbar";
-import StatCard from "./components/dashboard/StatCard";
-import FileAnalysisResults from "./modules/analyzer/components/FileAnalysisResults";
 import useProjectFiles from "./modules/analyzer/hooks/useProjectFiles";
 import useProjectAnalysis from "./modules/analyzer/hooks/useProjectAnalysis";
-import ProjectStatistics from "./components/dashboard/ProjectStatistics";
-import RecentProjects from "./components/dashboard/RecentProjects";
-import AnalyzeLocalFolder from "./modules/analyzer/components/AnalyzeLocalFolder";
-import AnalyzeGitHubRepository from "./modules/analyzer/components/AnalyzeGitHubRepository";
+import Repositories from "./pages/Repositories";
+import CodeGraph from "./pages/CodeGraph";
+import ApiTracing from "./pages/ApiTracing";
+import AIAssistant from "./pages/AIAssistant";
+import Dashboard from "./pages/Dashboard";
 import "./App.css";
 function App() {
   const [isSideBarOpen, setIsSideBarOpen] = useState(false);
@@ -73,51 +73,49 @@ function App() {
         <Navbar onMenuClick={() => setIsSideBarOpen(true)} />
 
         <main className="w-full space-y-6 p-4 sm:space-y-8 sm:p-6 lg:p-8">
-          {/* Page Heading */}
-          <div>
-            <h1 className="text-2xl font-bold text-white">
-              Dashboard Overview
-            </h1>
-
-            <p className="mt-2 text-sm text-slate-400">
-              Understand your codebase with RepoMind AI.
-            </p>
-          </div>
-
-          {/* Analyze Repository */}
-
-          <AnalyzeGitHubRepository
-            handleScanGitHubRepository={handleScanGitHubRepository}
-            isScanning={isGitHubScanning}
-            scanError={githubScanError}
-          />
-
-          <AnalyzeLocalFolder
-            selectedFiles={selectedFiles}
-            selectedFolderName={selectedFolderName}
-            handleFolderChange={handleFolderChange}
-            handleScanProject={handleScanProject}
-            isScanning={isLocalScanning}
-            scanError={localScanError}
-          />
-
-          {/* File Analysis Results */}
-          {analysisResult && (
-            <FileAnalysisResults
-              analysisResult={analysisResult}
-              files={files}
-              currentFiles={currentFiles}
-              currentPage={currentPage}
-              totalPages={totalPages}
-              expandedFile={expandedFile}
-              setExpandedFile={setExpandedFile}
-              setCurrentPage={setCurrentPage}
+          <Routes>
+            <Route
+              path="/"
+              element={
+                <Dashboard totalFiles={analysisResult?.totalFiles ?? 0} />
+              }
             />
-          )}
 
-          <ProjectStatistics totalFiles={analysisResult?.totalFiles ?? 0} />
+            <Route
+              path="/code-graph"
+              element={<CodeGraph analysisResult={analysisResult} />}
+            />
 
-          <RecentProjects />
+            <Route path="/api-tracing" element={<ApiTracing />} />
+            <Route path="/ai-assistant" element={<AIAssistant/>} />
+
+            <Route
+              path="/repositories"
+              element={
+                <Repositories
+                  selectedFiles={selectedFiles}
+                  selectedFolderName={selectedFolderName}
+                  handleFolderChange={handleFolderChange}
+                  handleScanProject={handleScanProject}
+                  handleScanGitHubRepository={handleScanGitHubRepository}
+                  isLocalScanning={isLocalScanning}
+                  isGitHubScanning={isGitHubScanning}
+                  localScanError={localScanError}
+                  githubScanError={githubScanError}
+                  analysisResult={analysisResult}
+                  files={files}
+                  currentFiles={currentFiles}
+                  currentPage={currentPage}
+                  totalPages={totalPages}
+                  expandedFile={expandedFile}
+                  setExpandedFile={setExpandedFile}
+                  setCurrentPage={setCurrentPage}
+                />
+              }
+            />
+
+            <Route path="*" element={<Navigate to="/" replace />} />
+          </Routes>
         </main>
       </div>
     </div>

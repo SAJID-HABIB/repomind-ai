@@ -1,9 +1,10 @@
+import { NavLink } from "react-router-dom";
 const navigationItems = [
-  { name: "Dashboard", icon: "⌂", active: true },
-  { name: "Repositories", icon: "▤", active: false },
-  { name: "API Tracing", icon: "⇄", active: false },
-  { name: "Code Graph", icon: "◎", active: false },
-  { name: "AI Assistant", icon: "✳", active: false },
+  { name: "Dashboard", icon: "⌂", path: "/" },
+  { name: "Repositories", icon: "▤", path: "/repositories" },
+  { name: "API Tracing", icon: "⇄", path: "/api-tracing" },
+  { name: "Code Graph", icon: "◎", path: "/code-graph" },
+  { name: "AI Assistant", icon: "✳", path: "/ai-assistant" },
 ];
 
 function Sidebar() {
@@ -22,30 +23,31 @@ function Sidebar() {
           <p className="mt-1 text-xs text-slate-500">Code Intelligence</p>
         </div>
       </div>
-
       {/* Section Heading */}
       <p className="mb-3 shrink-0 px-3 text-xs font-semibold uppercase tracking-wider text-slate-500">
         Workspace
       </p>
-
       {/* Navigation */}
+
       <nav className="flex-1 space-y-2">
         {navigationItems.map((item) => (
-          <a
+          <NavLink
             key={item.name}
-            href="#"
-            className={`flex min-h-12 items-center gap-3 rounded-xl px-3 py-3 text-sm transition ${
-              item.active
-                ? "bg-blue-600/15 font-medium text-blue-400"
-                : "text-slate-400 hover:bg-slate-900 hover:text-white"
-            }`}
+            to={item.path}
+            className={({ isActive }) =>
+              `flex min-h-12 items-center gap-3 rounded-xl px-3 py-3 text-sm transition ${
+                isActive
+                  ? "bg-blue-600/15 font-medium text-blue-400"
+                  : "text-slate-400 hover:bg-slate-900 hover:text-white"
+              }`
+            }
           >
             <span className="flex w-6 shrink-0 items-center justify-center text-lg">
               {item.icon}
             </span>
 
             <span className="whitespace-nowrap">{item.name}</span>
-          </a>
+          </NavLink>
         ))}
       </nav>
 

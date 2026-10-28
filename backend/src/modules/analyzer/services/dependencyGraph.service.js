@@ -7,15 +7,23 @@ function buildDependencyGraph(files) {
     nodes.push({
       id: file.file,
       label: file.file.split("/").pop(),
-      languge: file.languge,
+      language: file.language,
     });
-    if (!Array.isArray(file.dependencies)) {
+    if (!Array.isArray(file.imports)) {
       continue;
     }
-    for (const dependency of file.dependencies) {
-      if (!filePath.has(dependency)) {
+
+    for (const importSource of file.imports) {
+      const dependency = resolveLocalDependency(
+        file.file,
+        importSource,
+        filePath,
+      );
+
+      if (!dependency) {
         continue;
       }
+
       edges.push({
         source: file.file,
         target: dependency,
