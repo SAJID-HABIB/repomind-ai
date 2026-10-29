@@ -19,6 +19,7 @@ function CodeGraph({ analysisResult }) {
         <DependencyGraph
           nodes={dependencyGraph.nodes}
           edges={dependencyGraph.edges}
+          files={analysisResult?.files || []}
         />
       ) : (
         <div className="rounded-xl border border-slate-800 bg-slate-900/50 p-6">
