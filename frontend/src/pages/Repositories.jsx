@@ -20,13 +20,13 @@ function Repositories({
   expandedFile,
   setExpandedFile,
   setCurrentPage,
+  setSearchQuery,
+  searchQuery,
 }) {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold text-white">
-          Repositories
-        </h1>
+        <h1 className="text-2xl font-bold text-white">Repositories</h1>
 
         <p className="mt-2 text-sm text-slate-400">
           Scan a local project or analyze a GitHub repository.
@@ -58,6 +58,8 @@ function Repositories({
           expandedFile={expandedFile}
           setExpandedFile={setExpandedFile}
           setCurrentPage={setCurrentPage}
+          searchQuery={searchQuery}
+          setSearchQuery={setSearchQuery}
         />
       )}
     </div>

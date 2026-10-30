@@ -16,6 +16,7 @@ function App() {
     useProjectFiles();
   const [expandedFile, setExpandedFile] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
+  const [searchQuery, setSearchQuery] = useState("");
   const {
     isLocalScanning,
     isGitHubScanning,
@@ -29,11 +30,22 @@ function App() {
     setCurrentPage,
     setExpandedFile,
   });
+
   const filesPerPage = 5;
   const files = analysisResult?.files || [];
-  const totalPages = Math.ceil(files.length / filesPerPage);
+  console.log("Full Analysis Result:", analysisResult);
+  const filteredFiles = files.filter((file) =>
+    file.file.toLowerCase().includes(searchQuery.toLocaleLowerCase()),
+  );
+      console.log({
+  searchQuery,
+  totalFiles: files.length,
+  filteredFiles: filteredFiles.length,
+});
+  const totalPages = Math.ceil(filteredFiles.length / filesPerPage);
   const startIndex = (currentPage - 1) * filesPerPage;
-  const currentFiles = files.slice(startIndex, startIndex + filesPerPage);
+  const currentFiles = filteredFiles.slice(startIndex, startIndex + filesPerPage);
+
   return (
     <div className="flex min-h-screen w-full bg-slate-950">
       {/* Desktop Sidebar */}
@@ -87,7 +99,7 @@ function App() {
             />
 
             <Route path="/api-tracing" element={<ApiTracing />} />
-            <Route path="/ai-assistant" element={<AIAssistant/>} />
+            <Route path="/ai-assistant" element={<AIAssistant />} />
 
             <Route
               path="/repositories"
@@ -110,6 +122,8 @@ function App() {
                   expandedFile={expandedFile}
                   setExpandedFile={setExpandedFile}
                   setCurrentPage={setCurrentPage}
+                  searchQuery={searchQuery}
+                  setSearchQuery={setSearchQuery}
                 />
               }
             />

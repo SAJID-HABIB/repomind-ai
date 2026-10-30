@@ -78,26 +78,46 @@ function DependencyGraph({ nodes = [], edges = [], files = [] }) {
 
     return {
       graphNodes: layout.nodes,
-      graphEdges: layout.edges.map((edge, index) => ({
-        ...edge,
-        id: `${edge.source}-${edge.target}-${index}`,
-        type: "default",
-        label: "imports",
-        animated: true,
-        style: {
-          stroke: "#2dd4bf",
-          strokeWidth: 1.6,
-        },
-        labelStyle: {
-          fill: "#99f6e4",
-          fontSize: 10,
-          fontWeight: 500,
-        },
-        labelBgStyle: {
-          fill: "#07131a",
-          fillOpacity: 0.95,
-        },
-      })),
+      graphEdges: layout.edges.map((edge, index) => {
+        const connectionColors = [
+          "#a855f7",
+          "#3b82f6",
+          "#ec4899",
+          "#06b6d4",
+          "#8b5cf6",
+          "#f97316",
+        ];
+
+        const connectionColor =
+          connectionColors[index % connectionColors.length];
+
+        return {
+          ...edge,
+          id: `${edge.source}-${edge.target}-${index}`,
+          type: "default",
+          label: "imports",
+          animated: true,
+
+          style: {
+            stroke: connectionColor,
+            strokeWidth: 3,
+            filter: `drop-shadow(0 0 5px ${connectionColor})`,
+          },
+
+          labelStyle: {
+            fill: connectionColor,
+            fontSize: 11,
+            fontWeight: 700,
+          },
+
+          labelBgStyle: {
+            fill: "#07131a",
+            fillOpacity: 0.95,
+          },
+          labelBgPadding: [8, 5],
+          labelBgBorderRadius: 5,
+        };
+      }),
     };
   }, [nodes, edges]);
 
