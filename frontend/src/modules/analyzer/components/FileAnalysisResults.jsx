@@ -181,7 +181,8 @@ function FileAnalysisResults({
                     {/* Functions */}
                     <div>
                       <h5 className="mb-2 font-semibold text-purple-300">
-                        Functions ({file.functions?.length ?? 0})
+                        Functions & Methods ({file.functionDetails?.length ?? 0}
+                        )
                       </h5>
 
                       {file.functionDetails?.length > 0 ? (
@@ -191,14 +192,65 @@ function FileAnalysisResults({
                               key={`${func.name}-${index}`}
                               className="rounded-lg border border-slate-700 bg-slate-950 p-3"
                             >
+                              <div className="flex flex-wrap items-center gap-2 mb-2">
+                                {func.methodType && (
+                                  <span className="rounded bg-purple-500/10 px-2 py-1 text-xs text-purple-300">
+                                    {func.isStatic
+                                      ? `Static ${func.methodType}`
+                                      : func.methodType}
+                                  </span>
+                                )}
+                              </div>
                               <code className="break-all text-sm text-slate-200">
-                                {func.name}({func.parameters?.join(", ")})
+                                {`${func.className ? `${func.className}.` : ""}${func.name}(${func.parameters?.join(", ")})`}
                               </code>
                             </div>
                           ))}
                         </div>
                       ) : (
                         <p className="text-sm text-slate-500">None detected</p>
+                      )}
+                    </div>
+
+                    <div>
+                      <h5 className="mb-2 font-semibold text-cyan-300">
+                        Class Properties({file.classProperties?.length ?? 0})
+                      </h5>
+                      {file.classProperties?.length > 0 ? (
+                        <div>
+                          {file.classProperties.map((property, index) => (
+                            <div
+                              key={`${property.className}-${property.name}-${index}`}
+                              className="rounded-lg border border-slate-700 bg-slate-950 p-3"
+                            >
+                              <div className="mb-2 flex flex-wrap gap-2">
+                                {property.isStatic && (
+                                  <span
+                                    span
+                                    className="rounded bg-blue-500/10 px-2 py-1 text-xs text-blue-300"
+                                  >
+                                    Static
+                                  </span>
+                                )}
+                                {property.isStatic && (
+                                  <span
+                                    span
+                                    className="rounded bg-blue-500/10 px-2 py-1 text-xs text-blue-300"
+                                  >
+                                    Private
+                                  </span>
+                                )}
+                              </div>
+                              <code className="break-all text-sm text-slate-200">
+                                {property.className}.{property.name}
+                              </code>
+                            </div>
+                          ))}
+                        </div>
+                      ) : (
+                        <p className="text-sm text-slate-500">
+                          No class properties found.
+                        </p>
                       )}
                     </div>
 

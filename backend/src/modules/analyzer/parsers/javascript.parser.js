@@ -53,8 +53,9 @@ function analyzeJavaScriptSource(sourceCode, extension) {
   const classes = [];
   const imports = [];
   const exports = [];
+  const classProperties = [];
 
-  function visit(node) {
+  function visit(node, className = null) {
     if (!node || typeof node !== "object") {
       return;
     }
@@ -85,6 +86,37 @@ function analyzeJavaScriptSource(sourceCode, extension) {
 
     if (node.type === "ClassDeclaration" && node.id?.name) {
       classes.push(node.id.name);
+      className = node.id.name;
+    }
+
+    if ( (node.type === "ClassProperty" ||
+    node.type === "ClassPrivateProperty") && className) {
+      classProperties.push({
+        name: node.key.type === "PrivateName" ? `#${node.key.id.name}` : node.key.name,
+        className,
+        isStatic: node.static,
+        isPrivate: node.key.type === "PrivateName",
+      })
+    }
+
+    if (node.type === "ClassMethod" || node.type === "ClassPrivateMethod") {
+      functionDetails.push({
+        name:
+          node.type === "ClassPrivateMethod"
+            ? `#${node.key.id.name}`
+            : node.key.name,
+        className,
+        parameters: node.params.flatMap(extractParameterNames),
+        methodType:
+          node.kind === "constructor"
+            ? "constructor"
+            : node.kind === "get"
+              ? "getter"
+              : node.kind === "set"
+                ? "setter"
+                : "method",
+        isStatic: node.static,
+      });
     }
 
     if (node.type === "ImportDeclaration") {
@@ -139,10 +171,10 @@ function analyzeJavaScriptSource(sourceCode, extension) {
     for (const value of Object.values(node)) {
       if (Array.isArray(value)) {
         for (const item of value) {
-          visit(item);
+          visit(item, className);
         }
       } else if (value && typeof value === "object") {
-        visit(value);
+        visit(value, className);
       }
     }
   }
@@ -155,6 +187,7 @@ function analyzeJavaScriptSource(sourceCode, extension) {
     classes,
     imports,
     exports,
+    classProperties,
   };
 }
 

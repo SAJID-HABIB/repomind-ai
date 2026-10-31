@@ -10,7 +10,7 @@ const repositoryPath = path.join(__dirname, "sample-project");
 async function testAnalyzer() {
   try {
     const result = await analyzeRepository(repositoryPath);
-    console.log("Analysis result:", result);
+    console.log("Analysis result:", JSON.stringify(result, null, 2));
   } catch (error) {
     console.error("Analysis failed:", error);
   }
