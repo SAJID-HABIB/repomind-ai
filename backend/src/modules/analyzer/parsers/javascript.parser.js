@@ -32,6 +32,73 @@ function extractParameterNames(param) {
   return ["destructured"];
 }
 
+function extractUsedProperties(node) {
+  const properties = new Set();
+  function visitNode(currentNode) {
+    if (!currentNode || typeof currentNode !== "object") {
+      return;
+    }
+    if (
+      currentNode.type === "CallExpression" &&
+      currentNode.callee?.type === "MemberExpression" &&
+      currentNode.callee.object?.type === "ThisExpression"
+    ) {
+      visitNode(currentNode.arguments);
+      return;
+    }
+    if (
+      currentNode.type === "MemberExpression" &&
+      currentNode.object?.type === "ThisExpression" &&
+      !currentNode.computed &&
+      currentNode.property?.type === "Identifier" &&
+      !(currentNode.parent && currentNode.parent.type === "CallExpression")
+    ) {
+      properties.add(currentNode.property.name);
+    }
+    for (const value of Object.values(currentNode)) {
+      if (Array.isArray(value)) {
+        value.forEach(visitNode);
+      } else if (value && typeof value === "object") {
+        visitNode(value);
+      }
+    }
+  }
+  visitNode(node.body);
+  return [...properties];
+}
+
+function extractCalledMethods(node) {
+  const methods = new Set();
+
+  function visitNode(currentNode) {
+    if (!currentNode || typeof currentNode !== "object") {
+      return;
+    }
+
+    if (
+      currentNode.type === "CallExpression" &&
+      currentNode.callee?.type === "MemberExpression" &&
+      currentNode.callee.object?.type === "ThisExpression" &&
+      !currentNode.callee.computed &&
+      currentNode.callee.property?.type === "Identifier"
+    ) {
+      methods.add(currentNode.callee.property.name);
+    }
+
+    for (const value of Object.values(currentNode)) {
+      if (Array.isArray(value)) {
+        value.forEach(visitNode);
+      } else if (value && typeof value === "object") {
+        visitNode(value);
+      }
+    }
+  }
+
+  visitNode(node.body);
+
+  return [...methods];
+}
+
 function analyzeJavaScriptSource(sourceCode, extension) {
   const plugins = [];
 
@@ -54,6 +121,7 @@ function analyzeJavaScriptSource(sourceCode, extension) {
   const imports = [];
   const exports = [];
   const classProperties = [];
+  const classInheritance = [];
 
   function visit(node, className = null) {
     if (!node || typeof node !== "object") {
@@ -86,6 +154,10 @@ function analyzeJavaScriptSource(sourceCode, extension) {
 
     if (node.type === "ClassDeclaration" && node.id?.name) {
       classes.push(node.id.name);
+      classInheritance.push({
+        className: node.id.name,
+        superClass: node.superClass?.name || null,
+      });
       className = node.id.name;
     }
 
@@ -112,6 +184,8 @@ function analyzeJavaScriptSource(sourceCode, extension) {
             : node.key.name,
         className,
         parameters: node.params.flatMap(extractParameterNames),
+        usedProperties: extractUsedProperties(node),
+        calledMethods: extractCalledMethods(node),
         methodType:
           node.kind === "constructor"
             ? "constructor"
@@ -232,6 +306,7 @@ function analyzeJavaScriptSource(sourceCode, extension) {
     imports,
     exports,
     classProperties,
+    classInheritance,
   };
 }
 

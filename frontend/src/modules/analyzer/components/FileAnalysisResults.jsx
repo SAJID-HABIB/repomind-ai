@@ -10,8 +10,6 @@ function FileAnalysisResults({
   searchQuery,
   setSearchQuery,
 }) {
-  console.log("FileAnalysisResults is rendering");
-
   return (
     <>
       <div className="mt-6 rounded-xl border border-slate-700 bg-slate-950 p-4">
@@ -118,6 +116,7 @@ function FileAnalysisResults({
         <div className="mt-3 space-y-3">
           {files.length === 0 ? (
             <p>No file available for the analysis.</p>
+            
           ) : (
             currentFiles.map((file) => (
               <div
@@ -224,10 +223,8 @@ function FileAnalysisResults({
                               className="rounded-lg border border-slate-700 bg-slate-950 p-3"
                             >
                               <div className="mb-2 flex flex-wrap gap-2">
-                                {property.isStatic && (
-                                  <span
-                                    className="rounded bg-blue-500/10 px-2 py-1 text-xs text-blue-300"
-                                  >
+                                {property.isPrivate && (
+                                  <span className="rounded bg-blue-500/10 px-2 py-1 text-xs text-blue-300">
                                     Static
                                   </span>
                                 )}
@@ -237,9 +234,7 @@ function FileAnalysisResults({
                                   </span>
                                 )}
                                 {property.isStatic && (
-                                  <span
-                                    className="rounded bg-blue-500/10 px-2 py-1 text-xs text-blue-300"
-                                  >
+                                  <span className="rounded bg-blue-500/10 px-2 py-1 text-xs text-blue-300">
                                     Private
                                   </span>
                                 )}
@@ -253,6 +248,37 @@ function FileAnalysisResults({
                       ) : (
                         <p className="text-sm text-slate-500">
                           No class properties found.
+                        </p>
+                      )}
+                    </div>
+
+                    <div>
+                      <h5 className="mb-2 font-semibold text-cyan-300">
+                        Class Inheritance ({file.classInheritance?.length ?? 0})
+                      </h5>
+                      {file.classInheritance?.length > 0 ? (
+                        <div className="space-y-2">
+                          {file.classInheritance.map((inheritance, index) => (
+                            <div
+                              key={`${inheritance.className}-${index}`}
+                              className="rounded-lg border border-slate-700 bg-slate-950 p-3"
+                            >
+                              <code className="break-all text-sm text-slate-200">
+                                {inheritance.className}
+                              </code>
+
+                              <p className="mt-1 text-sm text-slate-400">
+                                Extends:{" "}
+                                <span className="text-green-300">
+                                  {inheritance.superClass || "No parent class"}
+                                </span>
+                              </p>
+                            </div>
+                          ))}
+                        </div>
+                      ) : (
+                        <p className="text-sm text-slate-500">
+                          No class inheritance found.
                         </p>
                       )}
                     </div>

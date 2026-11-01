@@ -33,15 +33,10 @@ function App() {
 
   const filesPerPage = 5;
   const files = analysisResult?.files || [];
-  console.log("Full Analysis Result:", analysisResult);
   const filteredFiles = files.filter((file) =>
     file.file.toLowerCase().includes(searchQuery.toLocaleLowerCase()),
   );
-      console.log({
-  searchQuery,
-  totalFiles: files.length,
-  filteredFiles: filteredFiles.length,
-});
+
   const totalPages = Math.ceil(filteredFiles.length / filesPerPage);
   const startIndex = (currentPage - 1) * filesPerPage;
   const currentFiles = filteredFiles.slice(startIndex, startIndex + filesPerPage);
