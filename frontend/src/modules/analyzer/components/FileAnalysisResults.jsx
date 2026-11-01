@@ -226,15 +226,18 @@ function FileAnalysisResults({
                               <div className="mb-2 flex flex-wrap gap-2">
                                 {property.isStatic && (
                                   <span
-                                    span
                                     className="rounded bg-blue-500/10 px-2 py-1 text-xs text-blue-300"
                                   >
                                     Static
                                   </span>
                                 )}
+                                {property.isConstructor && (
+                                  <span className="rounded bg-green-500/10 px-2 py-1 text-xs text-green-300">
+                                    Constructor
+                                  </span>
+                                )}
                                 {property.isStatic && (
                                   <span
-                                    span
                                     className="rounded bg-blue-500/10 px-2 py-1 text-xs text-blue-300"
                                   >
                                     Private

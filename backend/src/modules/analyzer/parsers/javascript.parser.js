@@ -89,14 +89,19 @@ function analyzeJavaScriptSource(sourceCode, extension) {
       className = node.id.name;
     }
 
-    if ( (node.type === "ClassProperty" ||
-    node.type === "ClassPrivateProperty") && className) {
+    if (
+      (node.type === "ClassProperty" || node.type === "ClassPrivateProperty") &&
+      className
+    ) {
       classProperties.push({
-        name: node.key.type === "PrivateName" ? `#${node.key.id.name}` : node.key.name,
+        name:
+          node.key.type === "PrivateName"
+            ? `#${node.key.id.name}`
+            : node.key.name,
         className,
         isStatic: node.static,
         isPrivate: node.key.type === "PrivateName",
-      })
+      });
     }
 
     if (node.type === "ClassMethod" || node.type === "ClassPrivateMethod") {
@@ -117,6 +122,45 @@ function analyzeJavaScriptSource(sourceCode, extension) {
                 : "method",
         isStatic: node.static,
       });
+    }
+
+    if (node.kind === "constructor" && className) {
+      for (const statement of node.body.body) {
+        if (
+          statement.type !== "ExpressionStatement" ||
+          !statement.expression ||
+          statement.expression.type !== "AssignmentExpression"
+        ) {
+          continue;
+        }
+        const asssigment = statement.expression;
+        const left = asssigment.left;
+        if (
+          !left ||
+          left.type !== "MemberExpression" ||
+          !left.object ||
+          left.object.type !== "ThisExpression" ||
+          left.computed ||
+          !left.property ||
+          left.property.type !== "Identifier"
+        ) {
+          continue;
+        }
+        const propertyName = left.property.name;
+        const alreadyExists = classProperties.some(
+          (property) =>
+            property.className === className && property.name === propertyName,
+        );
+        if (!alreadyExists) {
+          classProperties.push({
+            name: propertyName,
+            className,
+            isStatic: false,
+            isPrivate: false,
+            isConstructor: true,
+          });
+        }
+      }
     }
 
     if (node.type === "ImportDeclaration") {

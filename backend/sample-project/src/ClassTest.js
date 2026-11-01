@@ -1,9 +1,11 @@
 class User {
     name = "Guest";
 age = 20;
-  constructor(name) {
-    this.name = name;
-  }
+  constructor(name, age) {
+  this.name = name;
+  this.age = age;
+  this.email = "test@example.com";
+}
 
   static role = "Admin";
   #password = "12345";
