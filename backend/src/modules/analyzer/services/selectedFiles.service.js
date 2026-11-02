@@ -1,4 +1,5 @@
 import path from "node:path";
+import { resolveClassInheritance } from "./classInheritance.service.js";
 import {
   supportedExtensions,
   ignoredDirectories,
@@ -61,6 +62,7 @@ async function analyzeSelectedFiles(selectedFiles) {
   if (files.length === 0) {
     throw new Error("No supported files were found for analysis.");
   }
+  resolveClassInheritance(files);
   return {
     totalFiles: files.length,
     languageCounts,

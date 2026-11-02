@@ -273,6 +273,11 @@ function FileAnalysisResults({
                                   {inheritance.superClass || "No parent class"}
                                 </span>
                               </p>
+                              {inheritance.superClass && (
+                                <p className="mt-1 text-sm text-slate-400">Parent File:{""}
+                                <span className="break-all text-cyan-300">{inheritance.parentFile || "Parent file not resolved"}</span>
+                                </p>
+                              )}
                             </div>
                           ))}
                         </div>
