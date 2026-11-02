@@ -53,8 +53,8 @@ function useProjectAnalysis({
       );
 
       const result = await analyzeSelectedFiles(filesWithContent);
-
       setAnalysisResult(result.data);
+
     } catch (error) {
       setLocalScanError(
         error.message || "Something went wrong during scanning.",

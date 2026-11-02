@@ -1,3 +1,4 @@
+import App from "../../../frontend/src/App.jsx";
 import { User } from "./User.js";
 function greet(name) {
   return `Hello ${name}`;
@@ -40,3 +41,5 @@ export { Navbar as Header };
 
 export { User } from "./User.js";
 export * from "./User.js";
+
+export  {App};

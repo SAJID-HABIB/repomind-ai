@@ -1,6 +1,10 @@
 import path from "node:path";
 import { resolveClassInheritance } from "./classInheritance.service.js";
 import {
+  buildDependencyGraph,
+  detectCircularDependencies,
+} from "./dependencyGraph.service.js";
+import {
   supportedExtensions,
   ignoredDirectories,
 } from "../constants/analyzer.constants.js";
@@ -63,10 +67,14 @@ async function analyzeSelectedFiles(selectedFiles) {
     throw new Error("No supported files were found for analysis.");
   }
   resolveClassInheritance(files);
+  const { nodes, edges } = buildDependencyGraph(files);
+
+const circularDependencies = detectCircularDependencies(nodes, edges);
   return {
     totalFiles: files.length,
     languageCounts,
     files,
+    circularDependencies,
   };
 }
 

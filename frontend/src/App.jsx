@@ -110,6 +110,7 @@ function App() {
                   localScanError={localScanError}
                   githubScanError={githubScanError}
                   analysisResult={analysisResult}
+                  circularDependencies={analysisResult?.circularDependencies || []}
                   files={files}
                   currentFiles={currentFiles}
                   currentPage={currentPage}
