@@ -122,6 +122,7 @@ function analyzeJavaScriptSource(sourceCode, extension) {
   const exports = [];
   const classProperties = [];
   const classInheritance = [];
+  const importDetails = [];
 
   function visit(node, className = null) {
     if (!node || typeof node !== "object") {
@@ -239,8 +240,19 @@ function analyzeJavaScriptSource(sourceCode, extension) {
 
     if (node.type === "ImportDeclaration") {
       imports.push(node.source.value);
+      for (const specifier of node.specifiers) {
+        importDetails.push({
+          source: node.source.value,
+          importedName:
+            specifier.type === "ImportDefaultSpecifier"
+              ? "default"
+              : specifier.type === "ImportNamespaceSpecifier"
+                ? "*"
+                : specifier.imported.name || specifier.imported.value,
+                localName: specifier.local.name,
+        });
+      }
     }
-
     if (node.type === "ExportNamedDeclaration") {
       if (node.source) {
         imports.push(node.source.value);
@@ -307,6 +319,7 @@ function analyzeJavaScriptSource(sourceCode, extension) {
     exports,
     classProperties,
     classInheritance,
+    importDetails,
   };
 }
 
