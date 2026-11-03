@@ -1,5 +1,11 @@
 import { useMemo, useState } from "react";
-import { ReactFlow, Background, Controls, MiniMap } from "@xyflow/react";
+import {
+  ReactFlow,
+  MarkerType,
+  Background,
+  Controls,
+  MiniMap,
+} from "@xyflow/react";
 import dagre from "@dagrejs/dagre";
 import FileGraphNode from "./FileGraphNode";
 
@@ -72,12 +78,36 @@ function getLayoutedElements(nodes, edges) {
 function DependencyGraph({ nodes = [], edges = [], files = [] }) {
   const [selectedNode, setSelectedNode] = useState(null);
   const [fileSearch, setFileSearch] = useState("");
+  const [showIsolatedFiles, setShowIsolatedFiles] = useState(false);
 
   const { graphNodes, graphEdges } = useMemo(() => {
     const layout = getLayoutedElements(nodes, edges);
+    const connectedNodeIds = new Set();
+    if (selectedNode) {
+      layout.edges.forEach((edge) => {
+        if (edge.source === selectedNode) {
+          connectedNodeIds.add(edge.target);
+        }
+
+        if (edge.target === selectedNode) {
+          connectedNodeIds.add(edge.source);
+        }
+      });
+    }
 
     return {
-      graphNodes: layout.nodes,
+      graphNodes: layout.nodes.map((node) => ({
+        ...node,
+        selected: node.id === selectedNode,
+        data: {
+          ...node.data,
+          isConnected: connectedNodeIds.has(node.id),
+          isDimmed:
+            selectedNode !== null &&
+            node.id !== selectedNode &&
+            !connectedNodeIds.has(node.id),
+        },
+      })),
       graphEdges: layout.edges.map((edge, index) => {
         const connectionColors = [
           "#a855f7",
@@ -90,71 +120,96 @@ function DependencyGraph({ nodes = [], edges = [], files = [] }) {
 
         const connectionColor =
           connectionColors[index % connectionColors.length];
+        const isConnected =
+          edge.source === selectedNode || edge.target === selectedNode;
+
+        const edgeColor = selectedNode
+          ? isConnected
+            ? "#22d3ee"
+            : "#334155"
+          : connectionColor;
 
         return {
           ...edge,
           id: `${edge.source}-${edge.target}-${index}`,
           type: "default",
-          label: "imports",
-          animated: true,
+
+          label: selectedNode && isConnected ? "imports" : "",
+
+          animated: false,
 
           style: {
-            stroke: connectionColor,
-            strokeWidth: 3,
-            filter: `drop-shadow(0 0 5px ${connectionColor})`,
+            stroke: edgeColor,
+            strokeWidth: selectedNode ? (isConnected ? 3 : 2) : 2.8,
+            opacity: selectedNode && !isConnected ? 0.15 : 1,
+            filter:
+              isConnected && selectedNode
+                ? `drop-shadow(0 0 5px ${edgeColor})`
+                : `drop-shadow(0 0 3px ${edgeColor})`,
+          },
+
+          markerEnd: {
+            type: MarkerType.ArrowClosed,
+            width: 12,
+            height: 12,
+            color: edgeColor,
           },
 
           labelStyle: {
-            fill: connectionColor,
-            fontSize: 11,
-            fontWeight: 700,
+            fill: "#67e8f9",
+            fontSize: 10,
+            fontWeight: 600,
           },
 
           labelBgStyle: {
             fill: "#07131a",
             fillOpacity: 0.95,
           },
-          labelBgPadding: [8, 5],
-          labelBgBorderRadius: 5,
+
+          labelBgPadding: [6, 3],
+          labelBgBorderRadius: 4,
         };
       }),
     };
-  }, [nodes, edges]);
+  }, [nodes, edges, selectedNode]);
 
   const dependencyInsights = useMemo(() => {
-    const dependencyCounts = graphNodes.map((node) => {
-      const outgoingCount = graphEdges.filter(
-        (edge) => edge.source === node.id,
-      ).length;
+    const dependencyCounts = new Map();
 
-      const incomingCount = graphEdges.filter(
-        (edge) => edge.target === node.id,
-      ).length;
-
-      return {
+    // Initialize counts for every node
+    graphNodes.forEach((node) => {
+      dependencyCounts.set(node.id, {
         id: node.id,
         label: node.data?.label || node.id,
-        outgoingCount,
-        incomingCount,
-        isIsolated: outgoingCount === 0 && incomingCount === 0,
-      };
+        outgoingCount: 0,
+        incomingCount: 0,
+      });
     });
+
+    // Count all connections in one pass
+    graphEdges.forEach((edge) => {
+      const source = dependencyCounts.get(edge.source);
+      const target = dependencyCounts.get(edge.target);
+
+      if (source) source.outgoingCount++;
+      if (target) target.incomingCount++;
+    });
+
+    const files = Array.from(dependencyCounts.values()).map((file) => ({
+      ...file,
+      isIsolated: file.outgoingCount === 0 && file.incomingCount === 0,
+    }));
 
     return {
       mostDependencies:
-        [...dependencyCounts].sort(
-          (a, b) => b.outgoingCount - a.outgoingCount,
-        )[0] || null,
+        [...files].sort((a, b) => b.outgoingCount - a.outgoingCount)[0] || null,
 
       mostImported:
-        [...dependencyCounts].sort(
-          (a, b) => b.incomingCount - a.incomingCount,
-        )[0] || null,
+        [...files].sort((a, b) => b.incomingCount - a.incomingCount)[0] || null,
 
-      isolatedFiles: dependencyCounts.filter((file) => file.isIsolated),
+      isolatedFiles: files.filter((file) => file.isIsolated),
     };
   }, [graphEdges, graphNodes]);
-
   const selectedNodeData = graphNodes.find((node) => node.id === selectedNode);
 
   const analyzedFile = files.find((file) => file.file === selectedNode);
@@ -461,18 +516,43 @@ function DependencyGraph({ nodes = [], edges = [], files = [] }) {
               </button>
 
               {/* Isolated Files */}
+              {/* Isolated Files */}
               <div className="rounded-md border border-[#25404a] bg-[#071117] p-3">
-                <span className="block text-[10px] text-slate-500">
-                  Isolated Files
-                </span>
+                <button
+                  type="button"
+                  onClick={() => setShowIsolatedFiles((prev) => !prev)}
+                  disabled={dependencyInsights.isolatedFiles.length === 0}
+                  className="w-full text-left"
+                >
+                  <span className="block text-[10px] text-slate-500">
+                    Isolated Files
+                  </span>
 
-                <span className="mt-1 block text-lg font-semibold text-white">
-                  {dependencyInsights.isolatedFiles.length}
-                </span>
+                  <span className="mt-1 block text-lg font-semibold text-white">
+                    {dependencyInsights.isolatedFiles.length}
+                  </span>
 
-                <span className="mt-1 block text-[10px] text-slate-500">
-                  Files without graph connections
-                </span>
+                  <span className="mt-1 block text-[10px] text-slate-500">
+                    {showIsolatedFiles
+                      ? "Hide isolated files"
+                      : "View isolated files"}
+                  </span>
+                </button>
+
+                {showIsolatedFiles && (
+                  <div className="mt-3 space-y-2 border-t border-[#25404a] pt-3">
+                    {dependencyInsights.isolatedFiles.map((file) => (
+                      <button
+                        key={file.id}
+                        type="button"
+                        onClick={() => setSelectedNode(file.id)}
+                        className="block w-full truncate rounded border border-[#25404a] px-2 py-2 text-left text-xs text-teal-300 hover:border-teal-400/40"
+                      >
+                        {file.label}
+                      </button>
+                    ))}
+                  </div>
+                )}
               </div>
             </div>
           </div>

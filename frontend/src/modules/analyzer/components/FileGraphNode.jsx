@@ -1,15 +1,17 @@
-import {
-  Handle,
-  Position,
-} from "@xyflow/react";
+import { Handle, Position } from "@xyflow/react";
 
 function FileGraphNode({ data, selected }) {
+  const { isConnected, isDimmed } = data;
   return (
     <div
-      className={`w-[230px] rounded-xl border bg-slate-900 px-4 py-3 shadow-lg transition ${
+      className={`w-[230px] rounded-xl border bg-slate-900 px-4 py-3 shadow-lg transition-all duration-200 ${
         selected
-          ? "border-blue-400 ring-2 ring-blue-500/30"
-          : "border-slate-700 hover:border-blue-500"
+          ? "border-blue-400 ring-2 ring-blue-500/30 shadow-blue-500/20"
+          : isConnected
+            ? "border-teal-400 ring-1 ring-teal-500/20"
+            : isDimmed
+              ? "border-slate-800 opacity-30"
+              : "border-slate-700 hover:border-blue-500"
       }`}
     >
       <Handle
@@ -48,7 +50,5 @@ function FileGraphNode({ data, selected }) {
     </div>
   );
 }
-
-
 
 export default FileGraphNode;
