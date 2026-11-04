@@ -1,4 +1,27 @@
 import { parse } from "@babel/parser";
+function extractUrl(argument, sourceCode) {
+  if (!argument) {
+    return null;
+  }
+  if (argument.type === "StringLiteral") {
+    return argument.value;
+  }
+  if (argument.type === "TemplateLiteral") {
+    const parts = [];
+    argument.quasis.forEach((quasi, index) => {
+      parts.push(quasi.value.cooked ?? quasi.value.raw);
+      if (index < argument.expressions.length) {
+        const expression = argument.expressions[index];
+
+        parts.push(
+          "${" + sourceCode.slice(expression.start, expression.end) + "}",
+        );
+      }
+    });
+    return parts.join("");
+  }
+  return null;
+}
 function extractFrontendRequests(sourceCode, filePath, extension) {
   const plugins = [];
   if ([".ts", ".tsx"].includes(extension)) {
@@ -7,10 +30,23 @@ function extractFrontendRequests(sourceCode, filePath, extension) {
   if ([".jsx", ".tsx"].includes(extension)) {
     plugins.push("jsx");
   }
-  const ast = parse(sourceCode, {
-    sourceType: "unambiguous",
-    plugins,
-  });
+  let ast;
+  try {
+    ast = parse(sourceCode, {
+      sourceType: "unambiguous",
+      plugins,
+    });
+  } catch (error) {
+    const location = error.loc
+      ? ` at line ${error.loc.line}, column ${error.loc.column}`
+      : "";
+
+    throw new Error(
+      `Failed to parse ${filePath}${location}: ${error.message}`,
+      { cause: error },
+    );
+  }
+
   const requests = [];
   const visited = new WeakSet();
   function visit(node) {
@@ -21,34 +57,35 @@ function extractFrontendRequests(sourceCode, filePath, extension) {
       return;
     }
     visited.add(node);
-   if (
-  node.type === "CallExpression" &&
-  node.callee.type === "Identifier" &&
-  node.callee.name === "fetch"
-) {
-  const fetchOptions = node.arguments[1];
+    if (
+      node.type === "CallExpression" &&
+      node.callee.type === "Identifier" &&
+      node.callee.name === "fetch"
+    ) {
+      const fetchOptions = node.arguments[1];
 
-  const methodProperty = fetchOptions?.type === "ObjectExpression"
-    ? fetchOptions.properties.find(
-        (property) =>
-          property.type === "ObjectProperty" &&
-          property.key.name === "method"
-      )
-    : null;
+      const methodProperty =
+        fetchOptions?.type === "ObjectExpression"
+          ? fetchOptions.properties.find(
+              (property) =>
+                property.type === "ObjectProperty" &&
+                property.key.name === "method",
+            )
+          : null;
 
-  const method =
-    methodProperty?.value?.type === "StringLiteral"
-      ? methodProperty.value.value.toUpperCase()
-      : "GET";
+      const method =
+        methodProperty?.value?.type === "StringLiteral"
+          ? methodProperty.value.value.toUpperCase()
+          : "GET";
 
-  requests.push({
-    method,
-    url: node.arguments[0]?.value || null,
-    requestType: "fetch",
-    sourceFile: filePath,
-    line: node.loc?.start.line,
-  });
-}
+      requests.push({
+        method,
+        url: extractUrl(node.arguments[0], sourceCode),
+        requestType: "fetch",
+        sourceFile: filePath,
+        line: node.loc?.start.line,
+      });
+    }
     if (
       node.type === "CallExpression" &&
       node.callee?.type === "MemberExpression" &&
@@ -59,7 +96,7 @@ function extractFrontendRequests(sourceCode, filePath, extension) {
       if (["GET", "POST", "PUT", "PATCH", "DELETE"].includes(method)) {
         requests.push({
           method,
-          url: node.arguments[0]?.value || null,
+          url: extractUrl(node.arguments[0], sourceCode),
           requestType: "axios",
           sourceFile: filePath,
           line: node.loc?.start.line,
