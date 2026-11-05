@@ -14,6 +14,17 @@ function matchEndpoint(frontendRequest, backendRoute) {
   return sameMethod && samePath;
 }
 
+function matchEndpoints(frontendRequest, backendRoute) {
+  return frontendRequest.map((request) => {
+    const matchedRoutes = backendRoute.filter((route) => matchEndpoint(request, route));
+    return{
+      frontendRequest: request,
+      matchedRoutes,
+      matched: matchedRoutes.length > 0,
+    }
+  });
+}
+
 function matchDynamicPath(requestPath, routePath) {
   const requestSegments = normalizePath(requestPath).split("/");
   const routeSegments = normalizePath(routePath).split("/");
@@ -24,4 +35,4 @@ function matchDynamicPath(requestPath, routePath) {
     return segment.startsWith(":") || segment === requestSegments[index];
   });
 }
-export { normalizePath, matchEndpoint, matchDynamicPath };
+export { normalizePath, matchEndpoint, matchDynamicPath, matchEndpoints };
