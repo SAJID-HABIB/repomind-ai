@@ -1,6 +1,7 @@
 import express from "express";
 import cors from "cors";
 import analyzerRoutes from "./modules/analyzer/analyzer.routes.js";
+import apiFlowRoutes from "./modules/api-flow/routes/api-flow.routes.js";
 
 const app = express();
 
@@ -26,5 +27,6 @@ app.get("/api/health", (req, res) => {
 
 // Analyzer routes
 app.use("/api/analyzer", analyzerRoutes);
+app.use("/api/api-flow", apiFlowRoutes)
 
 export default app;

@@ -1,5 +1,13 @@
-function createExecutionFlow(route) {
+function createExecutionFlow(route, controllerCalls = [], serviceDetails = []) {
   const handlers = route.handlers || [];
+  const controller = handlers.at(-1) || null;
+  const matchedControllerCalls = matchControllerServices(
+    controllerCalls,
+    serviceDetails,
+  );
+  const controllerServices = matchedControllerCalls.filter(
+    (call) => call.controllerName === controller,
+  );
 
   return {
     route: {
@@ -9,8 +17,22 @@ function createExecutionFlow(route) {
       line: route.line,
     },
     handlers: handlers.slice(0, -1),
-    controller: handlers.at(-1) || null,
+    controller,
+    services: controllerServices,
   };
 }
 
-export { createExecutionFlow };
+function matchControllerServices(controllerCalls, serviceDetails) {
+  return controllerCalls.map((controllerCalls) => {
+    const matchedService = serviceDetails.find((service) => {
+      service.functionName === controllerCalls.method;
+      return {
+        ...controllerCalls,
+        service: matchedService || null,
+        databaseCalls: matchedService?.databaseCalls || [],
+      };
+    });
+  });
+}
+
+export { createExecutionFlow, matchControllerServices };

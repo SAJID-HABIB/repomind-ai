@@ -1,12 +1,6 @@
-import express from "express";
-
-const router = express.Router();
-
-export default router;
-
 const validateApiFlowRequest = (req, res, next) => {
-  const { selectedFiles } = res.body;
-  if (Array.isArray(selectedFiles) || selectedFiles.length === 0) {
+  const { selectedFiles } = req.body;
+  if (Array.isArray(selectedFiles) && selectedFiles.length === 0) {
     return res.status(400).json({
       success: false,
       message: "Please provide at least one selected file.",

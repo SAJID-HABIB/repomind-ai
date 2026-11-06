@@ -7,6 +7,7 @@ function extractControllerCalls(sourceCode) {
   const serviceCalls = [];
   const importedModules = [];
   const visited = new WeakSet();
+  let currentController = null;
 
   function visit(node) {
     if (!node || typeof node !== "object") {
@@ -18,6 +19,12 @@ function extractControllerCalls(sourceCode) {
     }
 
     visited.add(node);
+    let previousController = currentController;
+    let enteredController = false;
+    if (node.type === "FunctionDeclaration") {
+      currentController = node.id?.name;
+      enteredController = true;
+    }
 
     if (node.type === "ImportDeclaration") {
       node.specifiers.forEach((specifier) => {
@@ -39,6 +46,7 @@ function extractControllerCalls(sourceCode) {
       )
     ) {
       serviceCalls.push({
+        controllerName: currentController,
         object: node.callee.object.name,
         method: node.callee.property.name,
         line: node.loc?.start.line,
@@ -70,6 +78,9 @@ function extractControllerCalls(sourceCode) {
       } else if (value && typeof value.type === "string") {
         visit(value);
       }
+    }
+    if (enteredController) {
+      currentController = previousController;
     }
   }
 

@@ -8,6 +8,7 @@ function extractServiceDetails(sourceCode) {
   const serviceDetails = [];
 
   const visited = new WeakSet();
+  let currentFunction = null;
   function visit(node) {
     if (!node || typeof node !== "object") {
       return;
@@ -16,9 +17,27 @@ function extractServiceDetails(sourceCode) {
       return;
     }
     visited.add(node);
+    let previousFunction = currentFunction;
+    let enteredFunction = false;
     if (node.type === "FunctionDeclaration") {
-      serviceDetails.push({
+      currentFunction = {
         functionName: node.id?.name,
+        line: node.loc?.start.line,
+        databaseCalls: [],
+      };
+      serviceDetails.push(currentFunction);
+      enteredFunction = true;
+    }
+    if (
+      node.type === "CallExpression" &&
+      node.callee.type === "MemberExpression" &&
+      node.callee.object.type === "Identifier" &&
+      node.callee.property.type === "Identifier" &&
+      currentFunction
+    ) {
+      currentFunction.databaseCalls.push({
+        model: node.callee.object.name,
+        method: node.callee.property.name,
         line: node.loc?.start.line,
       });
     }
@@ -34,7 +53,7 @@ function extractServiceDetails(sourceCode) {
       }
       const value = node[key];
       if (Array.isArray(value)) {
-        value.array.forEach((child) => {
+        value.forEach((child) => {
           if (child && typeof child.type === "string") {
             visit(child);
           }
@@ -42,6 +61,9 @@ function extractServiceDetails(sourceCode) {
       } else if (value && typeof value.type === "string") {
         visit(value);
       }
+    }
+    if (enteredFunction) {
+      currentFunction = previousFunction;
     }
   }
   visit(ast.program);
