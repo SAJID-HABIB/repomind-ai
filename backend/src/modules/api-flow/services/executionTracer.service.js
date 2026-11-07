@@ -1,5 +1,8 @@
-function createExecutionFlow(route, controllerCalls = [], serviceDetails = []) {
+function createExecutionFlow(route, controllerCalls = [], serviceDetails = [], middlewareDetails = []) {
   const handlers = route.handlers || [];
+  const middlewares = middlewareDetails.filter((middleware) =>
+  handlers.slice(0, -1).includes(middleware.name)
+);
   const controller = handlers.at(-1) || null;
   const matchedControllerCalls = matchControllerServices(
     controllerCalls,
@@ -19,19 +22,19 @@ function createExecutionFlow(route, controllerCalls = [], serviceDetails = []) {
     handlers: handlers.slice(0, -1),
     controller,
     services: controllerServices,
+    middlewares,
   };
 }
 
 function matchControllerServices(controllerCalls, serviceDetails) {
   return controllerCalls.map((controllerCalls) => {
-    const matchedService = serviceDetails.find((service) => {
-      service.functionName === controllerCalls.method;
+    const matchedService = serviceDetails.find((service) => 
+      service.functionName === controllerCalls.method);
       return {
         ...controllerCalls,
         service: matchedService || null,
         databaseCalls: matchedService?.databaseCalls || [],
-      };
-    });
+    };
   });
 }
 

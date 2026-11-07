@@ -5,12 +5,14 @@ import { extractServiceDetails } from "./service.parser.js";
 
 import { matchEndpoints } from "./endpointMatcher.service.js";
 import { createExecutionFlow } from "./executionTracer.service.js";
+import { extractMiddlewareDetails } from "../parsers/middleware.parser.js";
 
 async function analyzeApiFlow(selectedFiles) {
   const frontendRequests = [];
   const backendRoutes = [];
   const controllerCalls = [];
   const serviceDetails = [];
+  const middlewareDetails = [];
 
   // Step 1: Process all selected files
   for (const file of selectedFiles) {
@@ -19,16 +21,12 @@ async function analyzeApiFlow(selectedFiles) {
     const requests = extractFrontendRequests(
       file.content,
       file.path,
-      extension
+      extension,
     );
 
     frontendRequests.push(...requests);
 
-    const routes = extractBackendRoutes(
-      file.content,
-      file.path,
-      extension
-    );
+    const routes = extractBackendRoutes(file.content, file.path, extension);
 
     backendRoutes.push(...routes);
 
@@ -36,14 +34,18 @@ async function analyzeApiFlow(selectedFiles) {
     controllerCalls.push(...controllers);
 
     const services = extractServiceDetails(file.content);
+    const middlewares = extractMiddlewareDetails(
+      file.content,
+      file.path,
+      extension,
+    );
+
+    middlewareDetails.push(...middlewares);
     serviceDetails.push(...services);
   }
 
   // Step 2: Match frontend requests with backend routes
-  const matchedEndpoints = matchEndpoints(
-    frontendRequests,
-    backendRoutes
-  );
+  const matchedEndpoints = matchEndpoints(frontendRequests, backendRoutes);
 
   // Step 3: Create execution flows
   const executionFlows = matchedEndpoints.map((match) => {
@@ -55,9 +57,14 @@ async function analyzeApiFlow(selectedFiles) {
       };
     }
 
-    const executionFlow = match.matchedRoutes.map((route) =>
-      createExecutionFlow(route, controllerCalls, serviceDetails)
-    );
+    const executionFlow = match.matchedRoutes.map((route) => {
+      return createExecutionFlow(
+        route,
+        controllerCalls,
+        serviceDetails,
+        middlewareDetails,
+      );
+    });
 
     return {
       frontendRequest: match.frontendRequest,
@@ -70,9 +77,7 @@ async function analyzeApiFlow(selectedFiles) {
   return {
     totalRequests: frontendRequests.length,
     totalRoutes: backendRoutes.length,
-    totalMatched: matchedEndpoints.filter(
-      (match) => match.matched
-    ).length,
+    totalMatched: matchedEndpoints.filter((match) => match.matched).length,
     executionFlows,
   };
 }

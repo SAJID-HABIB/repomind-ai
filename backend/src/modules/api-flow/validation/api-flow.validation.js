@@ -1,6 +1,6 @@
 const validateApiFlowRequest = (req, res, next) => {
-  const { selectedFiles } = req.body;
-  if (Array.isArray(selectedFiles) && selectedFiles.length === 0) {
+  const { selectedFiles } = req.body || {};
+  if (!Array.isArray(selectedFiles) || selectedFiles.length === 0) {
     return res.status(400).json({
       success: false,
       message: "Please provide at least one selected file.",

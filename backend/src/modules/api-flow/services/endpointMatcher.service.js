@@ -16,12 +16,14 @@ function matchEndpoint(frontendRequest, backendRoute) {
 
 function matchEndpoints(frontendRequest, backendRoute) {
   return frontendRequest.map((request) => {
-    const matchedRoutes = backendRoute.filter((route) => matchEndpoint(request, route));
-    return{
+    const matchedRoutes = backendRoute.filter((route) =>
+      matchEndpoint(request, route),
+    );
+    return {
       frontendRequest: request,
       matchedRoutes,
       matched: matchedRoutes.length > 0,
-    }
+    };
   });
 }
 
