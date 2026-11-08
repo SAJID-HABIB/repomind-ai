@@ -1,10 +1,11 @@
 import { parse } from "@babel/parser";
 
-function extractControllerCalls(sourceCode) {
+function extractControllerCalls(sourceCode, filePath) {
   const ast = parse(sourceCode, {
     sourceType: "unambiguous",
   });
   const serviceCalls = [];
+  const controllers = [];
   const importedModules = [];
   const visited = new WeakSet();
   let currentController = null;
@@ -23,6 +24,38 @@ function extractControllerCalls(sourceCode) {
     let enteredController = false;
     if (node.type === "FunctionDeclaration") {
       currentController = node.id?.name;
+      controllers.push({
+        name: node.id?.name,
+        sourceFile: filePath,
+      });
+      enteredController = true;
+    } else if (
+      node.type === "VariableDeclarator" &&
+      ["ArrowFunctionExpression", "FunctionExpression"].includes(
+        node.init?.type,
+      )
+    ) {
+      currentController = node.id?.name;
+      controllers.push({ name: node.id?.name, sourceFile: filePath });
+      enteredController = true;
+    } else if (
+      node.type === "ObjectProperty" &&
+      ["ArrowFunctionExpression", "FunctionExpression"].includes(
+        node.value?.type,
+      )
+    ) {
+      currentController = node.key?.name;
+      controllers.push({
+        name: node.key?.name,
+        sourceFile: filePath,
+      });
+      enteredController = true;
+    } else if (node.type === "ObjectMethod") {
+      currentController = node.key?.name;
+      controllers.push({
+        name: node.key?.name,
+        sourceFile: filePath,
+      });
       enteredController = true;
     }
 
@@ -85,7 +118,10 @@ function extractControllerCalls(sourceCode) {
   }
 
   visit(ast.program);
-  return serviceCalls;
+  return {
+    serviceCalls,
+    controllers,
+  };
 }
 
 export { extractControllerCalls };

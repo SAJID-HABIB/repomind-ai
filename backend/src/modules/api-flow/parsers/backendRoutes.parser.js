@@ -46,6 +46,7 @@ function extractBackendRoutes(sourceCode, filePath, extension) {
   });
   const routes = [];
   const visited = new WeakSet();
+  const importedControllers = [];
   function visit(node) {
     if (!node || typeof node !== "object") {
       return;
@@ -54,6 +55,14 @@ function extractBackendRoutes(sourceCode, filePath, extension) {
       return;
     }
     visited.add(node);
+    if (node.type === "ImportDeclaration") {
+      node.specifiers.forEach((specifier) => {
+        importedControllers.push({
+          name: specifier.local.name,
+          source: node.source.value,
+        });
+      });
+    }
     if (
       node.type === "CallExpression" &&
       node.callee.type === "MemberExpression" &&
@@ -82,10 +91,17 @@ function extractBackendRoutes(sourceCode, filePath, extension) {
         .filter(Boolean);
 
       if (routePath !== null) {
+        const controllerImports = handlers
+          .map((handler) =>
+            importedControllers.find((item) => item.name === handler),
+          )
+          .filter(Boolean);
+          console.log("ROUTE CONTROLLER IMPORTS:", controllerImports);
         routes.push({
           method: node.callee.property.name.toUpperCase(),
           path: routePath,
           handlers,
+          controllerImports,
           sourceFile: filePath,
           line: node.loc?.start.line,
         });
