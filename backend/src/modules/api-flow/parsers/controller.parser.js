@@ -1,9 +1,21 @@
 import { parse } from "@babel/parser";
 
-function extractControllerCalls(sourceCode, filePath) {
+function extractControllerCalls(sourceCode, filePath, extension) {
+  const plugins = [];
+
+  if ([".ts", ".tsx"].includes(extension)) {
+    plugins.push("typescript");
+  }
+
+  if ([".jsx", ".tsx"].includes(extension)) {
+    plugins.push("jsx");
+  }
+
   const ast = parse(sourceCode, {
     sourceType: "unambiguous",
+    plugins,
   });
+
   const serviceCalls = [];
   const controllers = [];
   const importedModules = [];

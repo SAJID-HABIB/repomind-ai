@@ -115,26 +115,31 @@ async function analyzeGitHubRepository(repositoryUrl) {
     );
   }
   const files = [];
-  for (const sourceFiles of selectedFile) {
-    const rawUrl = `https://raw.githubusercontent.com/${encodeURIComponent(owner)}/${encodeURIComponent(repository)}/${encodeURIComponent(branch)}/${sourceFiles.path.split("/").map(encodeURIComponent).join("/")}`;
+  const sourceCodeFiles = [];
+  for (const sourceFilesItem of selectedFile) {
+    const rawUrl = `https://raw.githubusercontent.com/${encodeURIComponent(owner)}/${encodeURIComponent(repository)}/${encodeURIComponent(branch)}/${sourceFilesItem.path.split("/").map(encodeURIComponent).join("/")}`;
     const response = await fetch(rawUrl, {
       signal: AbortSignal.timeout(15000),
     });
     if (!response.ok) {
-      throw new Error(`Could not retrieve source file: ${sourceFiles.path}`);
+      throw new Error(`Could not retrieve source file: ${sourceFilesItem.path}`);
     }
     const sourceCode = await response.text();
-    if (sourceFiles.path === "package.json") {
+    sourceCodeFiles.push({
+      path: sourceFilesItem.path,
+      content: sourceCode,
+    });
+    if (sourceFilesItem.path === "package.json") {
     }
-    const extension = sourceFiles.path
-      .slice(sourceFiles.path.lastIndexOf("."))
+    const extension = sourceFilesItem.path
+      .slice(sourceFilesItem.path.lastIndexOf("."))
       .toLowerCase();
     const fileResult = {
-      file: sourceFiles.path,
+      file: sourceFilesItem.path,
       extension,
       language: supportedExtensions[extension],
     };
-    if (sourceFiles.path.endsWith("package.json")) {
+    if (sourceFilesItem.path.endsWith("package.json")) {
       try {
         const packageData = JSON.parse(sourceCode);
         fileResult.packageDependencies = packageData.dependencies || {};
@@ -182,6 +187,7 @@ async function analyzeGitHubRepository(repositoryUrl) {
     totalFiles: files.length,
     languageCounts,
     files,
+    sourceFiles: sourceCodeFiles,
   };
 }
 

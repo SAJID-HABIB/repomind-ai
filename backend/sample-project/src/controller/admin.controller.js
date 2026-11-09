@@ -1,10 +1,9 @@
-import { getAllUsers } from "../services/user.service.js";
+import * as userService from "../services/user.service.js";
 
-export const getUsers = (req, res) => {
-  const users = getAllUsers();
+export const getUsers = async (req, res) => {
+  const data = await userService.getAllData();
 
   res.json({
-    message: "Admin users fetched successfully",
-    data: users,
+    data,
   });
 };

@@ -14,6 +14,7 @@ function useProjectAnalysis({
   const [localScanError, setLocalScanError] = useState("");
   const [githubScanError, setGithubScanError] = useState("");
   const [analysisResult, setAnalysisResult] = useState(null);
+  const [sourceFiles, setSourceFiles] = useState([]);
 
   const handleScanProject = async () => {
     if (selectedFiles.length === 0) {
@@ -51,10 +52,9 @@ function useProjectAnalysis({
           content: await file.text(),
         })),
       );
-
       const result = await analyzeSelectedFiles(filesWithContent);
       setAnalysisResult(result.data);
-
+      setSourceFiles(filesWithContent);
     } catch (error) {
       setLocalScanError(
         error.message || "Something went wrong during scanning.",
@@ -77,6 +77,7 @@ function useProjectAnalysis({
     try {
       const result = await analyzeGitHubRepository(repositoryUrl.trim());
       setAnalysisResult(result.data);
+      setSourceFiles(result.data.sourceFiles || []);
     } catch (error) {
       setGithubScanError(
         error.message ||
@@ -93,6 +94,7 @@ function useProjectAnalysis({
     localScanError,
     githubScanError,
     analysisResult,
+    sourceFiles,
     handleScanProject,
     handleScanGitHubRepository,
   };

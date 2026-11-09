@@ -18,6 +18,7 @@ async function analyzeApiFlow(selectedFiles) {
   // Step 1: Process all selected files
   for (const file of selectedFiles) {
     const extension = "." + file.path.split(".").pop();
+    console.log("API FLOW FILE:", file.path, extension);
 
     const requests = extractFrontendRequests(
       file.content,
@@ -26,13 +27,19 @@ async function analyzeApiFlow(selectedFiles) {
     );
 
     frontendRequests.push(...requests);
+    if (requests.length > 0) {
+  console.log("DETECTED REQUESTS:", file.path, requests);
+}
 
     const routes = extractBackendRoutes(file.content, file.path, extension);
 
     backendRoutes.push(...routes);
 
-    const controllerResult = extractControllerCalls(file.content, file.path);
-    console.log("CONTROLLER RESULT:", file.path, controllerResult.controllers);
+    const controllerResult = extractControllerCalls(
+      file.content,
+      file.path,
+      extension,
+    );
     controllerCalls.push(...controllerResult.serviceCalls);
     if (
       file.path.includes("/controllers/") ||
@@ -41,7 +48,7 @@ async function analyzeApiFlow(selectedFiles) {
       controllerDeclarations.push(...controllerResult.controllers);
     }
 
-    const services = extractServiceDetails(file.content);
+    const services = extractServiceDetails(file.content, extension);
     const middlewares = extractMiddlewareDetails(
       file.content,
       file.path,

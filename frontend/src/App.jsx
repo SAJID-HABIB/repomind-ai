@@ -14,6 +14,7 @@ function App() {
   const [isSideBarOpen, setIsSideBarOpen] = useState(false);
   const { selectedFiles, selectedFolderName, handleFolderChange } =
     useProjectFiles();
+    console.log("App selectedFiles:", selectedFiles.length);
   const [expandedFile, setExpandedFile] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [searchQuery, setSearchQuery] = useState("");
@@ -23,6 +24,7 @@ function App() {
     localScanError,
     githubScanError,
     analysisResult,
+    sourceFiles,
     handleScanProject,
     handleScanGitHubRepository,
   } = useProjectAnalysis({
@@ -30,6 +32,7 @@ function App() {
     setCurrentPage,
     setExpandedFile,
   });
+  console.log("App sourceFiles:", sourceFiles.length);
 
   const filesPerPage = 5;
   const files = analysisResult?.files || [];
@@ -39,7 +42,10 @@ function App() {
 
   const totalPages = Math.ceil(filteredFiles.length / filesPerPage);
   const startIndex = (currentPage - 1) * filesPerPage;
-  const currentFiles = filteredFiles.slice(startIndex, startIndex + filesPerPage);
+  const currentFiles = filteredFiles.slice(
+    startIndex,
+    startIndex + filesPerPage,
+  );
 
   return (
     <div className="flex min-h-screen w-full bg-slate-950">
@@ -89,11 +95,13 @@ function App() {
             />
 
             <Route
+              path="/api-tracing"
+              element={<ApiTracing sourceFiles={sourceFiles} />}
+            />
+            <Route
               path="/code-graph"
               element={<CodeGraph analysisResult={analysisResult} />}
             />
-
-            <Route path="/api-tracing" element={<ApiTracing />} />
             <Route path="/ai-assistant" element={<AIAssistant />} />
 
             <Route
@@ -110,7 +118,9 @@ function App() {
                   localScanError={localScanError}
                   githubScanError={githubScanError}
                   analysisResult={analysisResult}
-                  circularDependencies={analysisResult?.circularDependencies || []}
+                  circularDependencies={
+                    analysisResult?.circularDependencies || []
+                  }
                   files={files}
                   currentFiles={currentFiles}
                   currentPage={currentPage}

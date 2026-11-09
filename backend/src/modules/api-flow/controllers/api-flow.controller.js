@@ -9,6 +9,7 @@ const analyzeApiFlowController = async (req, res, next) => {
             data: result,
         })
     } catch (error) {
+            console.error("API Flow Controller Error:", error);
         next(error);
     }
 }

@@ -5,7 +5,7 @@ function extractMiddlewareDetails(sourceCode, filePath, extension) {
   if ([".ts", ".tsx"].includes(extension)) {
     plugins.push("typescript");
   }
-  if (["tsx", ".tsx"].includes(extension)) {
+  if ([".jsx", ".tsx"].includes(extension)) {
     plugins.push("jsx");
   }
   const ast = parse(sourceCode, {

@@ -96,7 +96,6 @@ function extractBackendRoutes(sourceCode, filePath, extension) {
             importedControllers.find((item) => item.name === handler),
           )
           .filter(Boolean);
-          console.log("ROUTE CONTROLLER IMPORTS:", controllerImports);
         routes.push({
           method: node.callee.property.name.toUpperCase(),
           path: routePath,

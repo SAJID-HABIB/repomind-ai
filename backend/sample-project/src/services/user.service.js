@@ -1,6 +1,11 @@
-export const getAllUsers = () => {
-  return [
-    { id: 1, name: "Ali" },
-    { id: 2, name: "Ahmed" },
-  ];
-};
+class UserService {
+  async getAllUsers() {
+    const fetchUsers = async () => {
+      return await User.find({});
+    };
+
+    return await fetchUsers();
+  }
+}
+
+export default UserService;

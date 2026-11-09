@@ -25,9 +25,6 @@ function createExecutionFlow(
       (importedControllerPath === null ||
         normalize(item.sourceFile) === importedControllerPath),
   );
-  console.log("ROUTE CONTROLLER:", controller);
-  console.log("IMPORTED CONTROLLER PATH:", importedControllerPath);
-  console.log("AVAILABLE CONTROLLERS:", controllerDeclarations);
 
   const controllerFound = Boolean(matchedController);
   const matchedControllerCalls = matchControllerServices(
