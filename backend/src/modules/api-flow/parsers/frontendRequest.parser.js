@@ -8,6 +8,7 @@ function extractUrl(argument, sourceCode) {
   }
   if (argument.type === "TemplateLiteral") {
     const parts = [];
+
     argument.quasis.forEach((quasi, index) => {
       parts.push(quasi.value.cooked ?? quasi.value.raw);
       if (index < argument.expressions.length) {
@@ -19,6 +20,17 @@ function extractUrl(argument, sourceCode) {
       }
     });
     return parts.join("");
+  }
+  if (argument.type === "Identifier") {
+    const variableName = argument.name;
+
+    const variableRegex = new RegExp(
+      `\\b(?:const|let|var)\\s+${variableName}\\s*=\\s*["'\`]([^"'\`]*)["'\`]`,
+    );
+
+    const match = sourceCode.match(variableRegex);
+
+    return match ? match[1] : null;
   }
   return null;
 }

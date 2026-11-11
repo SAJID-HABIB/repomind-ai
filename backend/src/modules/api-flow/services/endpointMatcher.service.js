@@ -1,9 +1,13 @@
 function normalizePath(path) {
-  if (!path) {
-    return "";
+  if (!path) return "";
+
+  try {
+    path = new URL(path).pathname;
+  } catch {
+    // Keep relative paths unchanged
   }
 
-  return path.split("?")[0].replace(/\/+$/, "");
+  return path.split("?")[0].replace(/\/+$/, "") || "/";
 }
 
 function matchEndpoint(frontendRequest, backendRoute) {

@@ -3,6 +3,18 @@ import { analyzeApiFlow } from "../modules/api-flow/api/apiFlow.api.js";
 
 function ApiTracing({ sourceFiles = [] }) {
   console.log("API Tracing sourceFiles:", sourceFiles.length);
+  console.table(
+  sourceFiles.map((file) => ({
+    path: file.path,
+    hasContent: Boolean(file.content),
+    contentLength: file.content?.length || 0,
+  }))
+);
+
+console.log(
+  "SOURCE FILE SAMPLE:",
+  sourceFiles.slice(0, 3)
+);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [analysisError, setAnalysisError] = useState("");
   const [analysisResult, setAnalysisResult] = useState(null);
