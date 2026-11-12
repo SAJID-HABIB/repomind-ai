@@ -1,5 +1,5 @@
 async function analyzeSelectedFiles(filesWithContent) {
-  const response = await fetch("http://localhost:5000/api/analyzer", {
+  const response = await fetch("http://localhost:6001/api/analyzer", {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -15,7 +15,7 @@ async function analyzeSelectedFiles(filesWithContent) {
   return result;
 }
 async function analyzeGitHubRepository(repositoryUrl) {
-  const response = await fetch("http://localhost:5000/api/analyzer", {
+  const response = await fetch("http://localhost:6001/api/analyzer", {
     method: "POST",
     headers: {
       "Content-Type": "application/json",

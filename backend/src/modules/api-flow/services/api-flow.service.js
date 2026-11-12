@@ -21,7 +21,7 @@ async function analyzeApiFlow(selectedFiles) {
   // Step 1: Process all selected files
   for (const file of selectedFiles) {
     const extension = "." + file.path.split(".").pop();
-    console.log("API FLOW FILE:", file.path, extension);
+    // console.log("API FLOW FILE:", file.path, extension);
     if (file.path.endsWith("/app.js")) {
       const mountResult = extractMountRoutes(
         file.content,
@@ -41,9 +41,10 @@ async function analyzeApiFlow(selectedFiles) {
       );
 
       frontendRequests.push(...requests);
+      // console.log("FRONTEND REQUEST COUNT:", file.path, requests.length);
 
       if (requests.length > 0) {
-        console.log("DETECTED REQUESTS:", file.path, requests);
+        // console.log("DETECTED REQUESTS:", file.path, requests);
       }
     }
 
@@ -99,11 +100,11 @@ async function analyzeApiFlow(selectedFiles) {
   const matchedEndpoints = matchEndpoints(frontendRequests, backendRoutes);
 
   // Step 3: Create execution flows
-  console.log("BEFORE EXECUTION FLOWS MAP");
-console.log("MATCHED ENDPOINTS TYPE:", Array.isArray(matchedEndpoints));
-console.log("MATCHED ENDPOINTS:", matchedEndpoints);
+  // console.log("BEFORE EXECUTION FLOWS MAP");
+  // console.log("MATCHED ENDPOINTS TYPE:", Array.isArray(matchedEndpoints));
+  // console.log("MATCHED ENDPOINTS:", matchedEndpoints);
   const executionFlows = matchedEndpoints.map((match) => {
-     console.log("CURRENT MATCH:", match);
+    // console.log("CURRENT MATCH:", match);
     if (!match.matched) {
       return {
         frontendRequest: match.frontendRequest,

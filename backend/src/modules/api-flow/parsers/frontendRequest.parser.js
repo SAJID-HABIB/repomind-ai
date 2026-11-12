@@ -60,6 +60,80 @@ function extractFrontendRequests(sourceCode, filePath, extension) {
   }
 
   const requests = [];
+  const axiosInstances = new Set();
+
+  function collectAxiosInstances(node) {
+    if (
+      node.type === "VariableDeclarator" &&
+      node.id.type === "Identifier" &&
+      node.init?.type === "CallExpression" &&
+      node.init.callee.type === "MemberExpression" &&
+      node.init.callee.object.type === "Identifier" &&
+      node.init.callee.object.name === "axios" &&
+      node.init.callee.property.name === "create"
+    ) {
+      axiosInstances.add(node.id.name);
+    }
+
+    for (const key of Object.keys(node)) {
+      if (
+        [
+          "loc",
+          "start",
+          "end",
+          "extra",
+          "comments",
+          "leadingComments",
+          "trailingComments",
+          "innerComments",
+        ].includes(key)
+      ) {
+        continue;
+      }
+
+      const value = node[key];
+
+      if (Array.isArray(value)) {
+        value.forEach((child) => {
+          if (child && typeof child.type === "string") {
+            collectAxiosInstances(child);
+          }
+        });
+      } else if (
+        value &&
+        typeof value === "object" &&
+        typeof value.type === "string"
+      ) {
+        collectAxiosInstances(value);
+      }
+    }
+  }
+
+  collectAxiosInstances(ast.program);
+  const apiImports = ast.program.body
+    .filter(
+      (node) =>
+        node.type === "ImportDeclaration" &&
+        (node.source.value.includes("services/api") ||
+          node.source.value.includes("api.js") ||
+          node.source.value.includes("api")),
+    )
+    .map((node) => ({
+      source: node.source.value,
+      imports: node.specifiers.map((specifier) => ({
+        local: specifier.local.name,
+        imported:
+          specifier.type === "ImportSpecifier"
+            ? specifier.imported.name
+            : "default",
+      })),
+    }));
+
+  if (apiImports.length > 0) {
+    console.log("API IMPORTS:", filePath, JSON.stringify(apiImports, null, 2));
+  }
+
+  // console.log("DETECTED AXIOS INSTANCES:", [...axiosInstances]);
   const visited = new WeakSet();
   function visit(node) {
     if (!node || typeof node !== "object") {

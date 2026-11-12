@@ -1,4 +1,4 @@
-const API_FLOW_URL = "http://localhost:5000/api/api-flow/analyze";
+const API_FLOW_URL = "http://localhost:6001/api/api-flow/analyze";
 const analyzeApiFlow = async (selectedFiles) => {
     const response = await fetch(API_FLOW_URL, {
         method: "POST",

@@ -5,6 +5,7 @@ import { buildDependencyGraph } from "./services/dependencyGraph.service.js";
 
 async function analyzeRepositoryController(req, res) {
   try {
+    console.log("ANALYZER REQUEST RECEIVED");
     const { repositoryPath, selectedFiles, repositoryUrl } = req.body ?? {};
     const validation = validateAnalyzerRequest(req.body);
     if (!validation.valid) {

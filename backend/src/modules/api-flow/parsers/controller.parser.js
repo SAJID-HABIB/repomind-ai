@@ -79,26 +79,45 @@ function extractControllerCalls(sourceCode, filePath, extension) {
         });
       });
     }
-    if (
-      node.type === "CallExpression" &&
-      node.callee.type === "MemberExpression" &&
-      node.callee.object.type === "Identifier" &&
-      node.callee.property.type === "Identifier" &&
-      importedModules.some(
-        (module) =>
-          module.name === node.callee.object.name &&
-          module.source.toLowerCase().includes("service"),
-      )
-    ) {
-      serviceCalls.push({
-        controllerName: currentController,
-        object: node.callee.object.name,
-        method: node.callee.property.name,
-        line: node.loc?.start.line,
-        sourceFile: importedModules.find(
-          (module) => module.name === node.callee.object.name,
-        )?.source,
-      });
+    if (node.type === "CallExpression") {
+      let serviceImport = null;
+      let method = null;
+      let object = null;
+
+      if (
+        node.callee.type === "MemberExpression" &&
+        node.callee.object.type === "Identifier" &&
+        node.callee.property.type === "Identifier"
+      ) {
+        object = node.callee.object.name;
+        method = node.callee.property.name;
+
+        serviceImport = importedModules.find(
+          (module) =>
+            module.name === object &&
+            module.source.toLowerCase().includes("service"),
+        );
+      }
+
+      if (node.callee.type === "Identifier") {
+        method = node.callee.name;
+
+        serviceImport = importedModules.find(
+          (module) =>
+            module.name === method &&
+            module.source.toLowerCase().includes("service"),
+        );
+      }
+
+      if (serviceImport) {
+        serviceCalls.push({
+          controllerName: currentController,
+          object,
+          method,
+          line: node.loc?.start.line,
+          sourceFile: serviceImport.source,
+        });
+      }
     }
 
     for (const key of Object.keys(node)) {
