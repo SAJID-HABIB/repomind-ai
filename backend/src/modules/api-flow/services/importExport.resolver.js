@@ -74,6 +74,7 @@ function parseFile(file) {
       plugins,
     });
   } catch (error) {
+    console.log("Parsing error:", error.message);
     return null;
   }
 }
@@ -97,6 +98,15 @@ function resolveExport(filePath, exportName, fileRecords, visited = new Set()) {
   );
 
   if (matchingExport) {
+    if (matchingExport.type === "namespace" && matchingExport.resolvedPath) {
+      return {
+        filePath: matchingExport.resolvedPath,
+        type: "namespace",
+        exported: matchingExport.exported,
+        local: "*",
+      };
+    }
+
     if (matchingExport.source && matchingExport.resolvedPath) {
       return resolveExport(
         matchingExport.resolvedPath,
@@ -248,13 +258,39 @@ function buildImportExportMap(selectedFiles) {
         }
 
         for (const specifier of node.specifiers) {
-          exports.push({
-            type: "named",
-            exported: specifier.exported.name,
-            local: specifier.local.name,
-            source: node.source?.value || null,
-            resolvedPath,
-          });
+          if (specifier.type === "ExportNamespaceSpecifier") {
+            exports.push({
+              type: "namespace",
+              exported: specifier.exported.name,
+              local: "*",
+              source: node.source?.value || null,
+              resolvedPath,
+            });
+
+            continue;
+          }
+
+          if (specifier.type === "ExportDefaultSpecifier") {
+            exports.push({
+              type: "named",
+              exported: specifier.exported.name,
+              local: "default",
+              source: node.source?.value || null,
+              resolvedPath,
+            });
+
+            continue;
+          }
+
+          if (specifier.type === "ExportSpecifier") {
+            exports.push({
+              type: "named",
+              exported: specifier.exported.name,
+              local: specifier.local.name,
+              source: node.source?.value || null,
+              resolvedPath,
+            });
+          }
         }
       }
       if (node.type === "ExportAllDeclaration") {
@@ -289,7 +325,12 @@ function buildImportExportMap(selectedFiles) {
 
         resolvedExport:
           specifier.type === "namespace"
-            ? null
+            ? {
+                filePath: imported.resolvedPath,
+                type: "namespace",
+                exported: "*",
+                local: "*",
+              }
             : resolveExport(
                 imported.resolvedPath,
                 specifier.imported,
